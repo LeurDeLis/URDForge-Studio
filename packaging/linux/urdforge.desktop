@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=URDForge Studio
+GenericName=Robot URDF Modeling Tool
+Comment=Industrial STEP CAD to URDF & ROS2 Modeling Tool
+Exec=urdforge-studio %F
+Icon=urdforge-studio
+Terminal=false
+Categories=Development;Engineering;Science;Robotics;
+Keywords=robot;urdf;cad;step;ros;ros2;simulation;
+StartupNotify=true
+StartupWMClass=URDForge Studio
+MimeType=application/step;model/step;application/x-step;
