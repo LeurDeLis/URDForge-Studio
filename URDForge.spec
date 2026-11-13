@@ -13,6 +13,7 @@ datas = [
     (str(ROOT_DIR / "src" / "urdforge" / "server" / "static"), "urdforge/server/static"),
     (str(ROOT_DIR / "src" / "urdforge" / "server" / "static"), "src/urdforge/server/static"),
     (str(ROOT_DIR / "tests" / "fixtures"), "tests/fixtures"),
+    (str(ROOT_DIR / "assets"), "assets"),
 ]
 binaries = []
 hiddenimports = [
@@ -87,6 +88,7 @@ exe = EXE(
     strip=False,
     upx=True,
     console=False,  # Windowed desktop application (no cmd popup)
+    icon=str(ROOT_DIR / "assets" / "icon.ico"),
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

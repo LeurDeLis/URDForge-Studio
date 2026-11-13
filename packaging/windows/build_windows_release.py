@@ -107,6 +107,9 @@ def main():
     # 3. Build release/URDForge-Studio-v0.2.0-Setup.exe (GUI Installer)
     print("[3/4] Building release/URDForge-Studio-v0.2.0-Setup.exe...")
     setup_script = ROOT_DIR / "packaging" / "windows" / "setup_wizard.py"
+    icon_ico = str(ROOT_DIR / "assets" / "icon.ico")
+    assets_data = f"{str(ROOT_DIR / 'assets')};assets"
+
     pyinstaller_cmd = [
         sys.executable,
         "-m",
@@ -117,6 +120,10 @@ def main():
         "--windowed",
         "--name",
         "URDForge-Studio-v0.2.0-Setup",
+        "--icon",
+        icon_ico,
+        "--add-data",
+        assets_data,
         "--distpath",
         str(RELEASE_DIR),
         str(setup_script),
@@ -140,6 +147,10 @@ def main():
         "--windowed",
         "--name",
         "URDForge-Studio-v0.2.0-Portable",
+        "--icon",
+        icon_ico,
+        "--add-data",
+        assets_data,
         "--distpath",
         str(RELEASE_DIR),
         str(runner_script),

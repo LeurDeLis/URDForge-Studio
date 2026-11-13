@@ -116,6 +116,8 @@ class URDForgeMainWindow(QMainWindow):
         self.current_loaded_file: Optional[str] = None
 
         self.setWindowTitle("URDForge Studio | 机器人建模与仿真工具 (v0.2.0)")
+        if not QApplication.windowIcon().isNull():
+            self.setWindowIcon(QApplication.windowIcon())
         self.resize(1440, 900)
         self._center_window()
 
@@ -390,12 +392,30 @@ class URDForgeMainWindow(QMainWindow):
 
 def main() -> None:
     """Desktop Application Entry Point."""
-    # Note: Do not set AA_ShareOpenGLContexts in Qt 6 on Windows, as forcing OpenGL context
-    # sharing breaks D3D11 / ANGLE swapchain synchronization in QWebEngine and causes screen flicker.
+    # Ensure Windows taskbar correctly displays the application icon
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("URDForge.Studio.App.v020")
+        except Exception:
+            pass
 
     app = QApplication(sys.argv)
     app.setApplicationName("URDForge Studio")
     app.setOrganizationName("URDForge")
+
+    # Set Application Icon across all window frames and taskbar
+    icon_candidates = [
+        Path(getattr(sys, "_MEIPASS", "")) / "assets" / "icon.ico",
+        Path(getattr(sys, "_MEIPASS", "")) / "assets" / "icon.png",
+        CURRENT_DIR / "assets" / "icon.ico",
+        CURRENT_DIR / "assets" / "icon.png",
+        CURRENT_DIR / "src" / "urdforge" / "server" / "static" / "icon.png",
+    ]
+    for ic in icon_candidates:
+        if ic.exists():
+            app.setWindowIcon(QIcon(str(ic)))
+            break
 
     port = find_free_port(8765)
     host = "127.0.0.1"

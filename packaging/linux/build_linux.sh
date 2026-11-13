@@ -59,6 +59,7 @@ if command -v dpkg-deb &> /dev/null; then
     # Copy files
     cp -r "${DIST_DIR}/${APP_NAME}/"* "${DEB_DIR}/opt/${APP_NAME}/"
     cp "${SCRIPT_DIR}/urdforge.desktop" "${DEB_DIR}/usr/share/applications/"
+    cp "${SCRIPT_DIR}/urdforge-studio.png" "${DEB_DIR}/usr/share/icons/hicolor/256x256/apps/"
     
     # Symlink in /usr/bin
     cat << 'EOF' > "${DEB_DIR}/usr/bin/urdforge-studio"

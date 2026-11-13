@@ -23,6 +23,7 @@ OutputBaseFilename=URDForge-Studio-v{#MyAppVersion}-Windows-x64-Setup
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\..\assets\icon.ico
 ArchitecturesInstallIn64BitMode=x64
 
 [Languages]

@@ -57,6 +57,7 @@ $s = $ws.CreateShortcut('{str(shortcut_path)}')
 $s.TargetPath = '{str(target_exe)}'
 $s.WorkingDirectory = '{str(target_exe.parent)}'
 $s.Description = '{description}'
+$s.IconLocation = '{str(target_exe)},0'
 $s.Save()
 """
         subprocess.run(
@@ -74,6 +75,21 @@ class InstallerApp:
         self.root.title(f"{APP_NAME} v{APP_VERSION} 安装向导")
         self.root.geometry("560x420")
         self.root.resizable(False, False)
+
+        # Set Window Icon
+        ico_candidates = [
+            Path(getattr(sys, "_MEIPASS", "")) / "assets" / "icon.ico",
+            Path(getattr(sys, "_MEIPASS", "")) / "icon.ico",
+            Path(__file__).resolve().parent.parent.parent / "assets" / "icon.ico",
+            Path(sys.argv[0]).resolve().parent / "assets" / "icon.ico",
+        ]
+        for ic in ico_candidates:
+            if ic.exists():
+                try:
+                    self.root.iconbitmap(str(ic))
+                    break
+                except Exception:
+                    pass
 
         # Style configuration
         self.style = ttk.Style()
