@@ -1,8 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
 """PyInstaller build specification for URDForge Studio standalone desktop executable."""
 
+import os
 import sys
 from pathlib import Path
+from PyInstaller.utils.hooks import collect_all
 
 block_cipher = None
 ROOT_DIR = Path.cwd()
@@ -12,7 +14,7 @@ datas = [
     (str(ROOT_DIR / "src" / "urdforge" / "server" / "static"), "src/urdforge/server/static"),
     (str(ROOT_DIR / "tests" / "fixtures"), "tests/fixtures"),
 ]
-
+binaries = []
 hiddenimports = [
     "OCP",
     "open3d",
@@ -24,19 +26,6 @@ hiddenimports = [
     "PySide6.QtWidgets",
     "PySide6.QtCore",
     "PySide6.QtGui",
-    "fastapi",
-    "starlette",
-    "uvicorn",
-    "uvicorn.logging",
-    "uvicorn.loops",
-    "uvicorn.loops.auto",
-    "uvicorn.protocols",
-    "uvicorn.protocols.http",
-    "uvicorn.protocols.http.auto",
-    "uvicorn.protocols.websockets",
-    "uvicorn.protocols.websockets.auto",
-    "uvicorn.lifespan",
-    "uvicorn.lifespan.on",
     "python_multipart",
     "multipart",
     "urdforge",
@@ -56,10 +45,23 @@ hiddenimports = [
     "urdforge.utils.naming",
 ]
 
+# Fully collect all backend ASGI modules and dependencies
+for pkg in ("uvicorn", "fastapi", "starlette", "pydantic", "pydantic_core", "anyio", "sniffio", "h11", "click"):
+    try:
+        pkg_datas, pkg_binaries, pkg_hidden = collect_all(pkg)
+        datas += pkg_datas
+        binaries += pkg_binaries
+        hiddenimports += pkg_hidden
+    except Exception as e:
+        print(f"[Warning] Failed to collect_all({pkg}): {e}")
+
 a = Analysis(
     ["app.py"],
-    pathex=[str(ROOT_DIR), str(ROOT_DIR / "src")],
-    binaries=[],
+    pathex=[
+        str(ROOT_DIR),
+        str(ROOT_DIR / "src"),
+    ],
+    binaries=binaries,
     datas=datas,
     hiddenimports=hiddenimports,
     hookspath=[],
