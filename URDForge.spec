@@ -10,8 +10,8 @@ block_cipher = None
 ROOT_DIR = Path.cwd()
 
 datas = [
-    (str(ROOT_DIR / "src" / "urdforge" / "server" / "static"), "urdforge/server/static"),
-    (str(ROOT_DIR / "src" / "urdforge" / "server" / "static"), "src/urdforge/server/static"),
+    (str(ROOT_DIR / "src" / "urdforge"), "urdforge"),
+    (str(ROOT_DIR / "src" / "urdforge"), "src/urdforge"),
     (str(ROOT_DIR / "tests" / "fixtures"), "tests/fixtures"),
     (str(ROOT_DIR / "assets"), "assets"),
 ]

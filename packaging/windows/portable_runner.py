@@ -50,13 +50,20 @@ def main():
                 payload_zip = cand
                 break
 
-    if payload_zip and not target_exe.exists():
-        local_app_data.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(payload_zip, "r") as zf:
-            zf.extractall(local_app_data)
-
+    if payload_zip:
+        need_extract = False
         if not target_exe.exists():
-            target_exe = local_app_data / "URDForge-Studio" / "URDForge-Studio.exe"
+            need_extract = True
+        elif payload_zip.stat().st_mtime > target_exe.stat().st_mtime:
+            need_extract = True
+
+        if need_extract:
+            local_app_data.mkdir(parents=True, exist_ok=True)
+            with zipfile.ZipFile(payload_zip, "r") as zf:
+                zf.extractall(local_app_data)
+
+            if not target_exe.exists():
+                target_exe = local_app_data / "URDForge-Studio" / "URDForge-Studio.exe"
 
     if target_exe.exists():
         subprocess.Popen([str(target_exe)] + sys.argv[1:], cwd=str(target_exe.parent))

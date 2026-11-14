@@ -4,281 +4,494 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>URDForge Studio | 机器人建模与仿真工具</title>
-  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-  <link rel="icon" type="image/png" href="/static/icon.png">
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Three.js + OrbitControls + STLLoader -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <link rel="icon" type="image/png" href="./icon.png">
+  <!-- Completely Offline Local Vendor Assets (Zero external CDN dependency) -->
+  <script>
+    window.tailwind = {
+      config: {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              border: 'var(--border)',
+              input: 'var(--input)',
+              ring: 'var(--ring)',
+              background: 'var(--background)',
+              foreground: 'var(--foreground)',
+              primary: {
+                DEFAULT: 'var(--primary)',
+                foreground: 'var(--primary-foreground)'
+              },
+              secondary: {
+                DEFAULT: 'var(--secondary)',
+                foreground: 'var(--secondary-foreground)'
+              },
+              destructive: {
+                DEFAULT: 'var(--destructive)',
+                foreground: 'var(--destructive-foreground)'
+              },
+              muted: {
+                DEFAULT: 'var(--muted)',
+                foreground: 'var(--muted-foreground)'
+              },
+              accent: {
+                DEFAULT: 'var(--accent)',
+                foreground: 'var(--accent-foreground)'
+              },
+              popover: {
+                DEFAULT: 'var(--popover)',
+                foreground: 'var(--popover-foreground)'
+              },
+              card: {
+                DEFAULT: 'var(--card)',
+                foreground: 'var(--card-foreground)'
+              }
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <script src="./vendor/tailwindcss.js"></script>
+  <script src="./vendor/three.min.js"></script>
+  <script src="./vendor/OrbitControls.js"></script>
+  <script src="./vendor/STLLoader.js"></script>
   <style>
+    .hidden { display: none !important; }
+
+    /* Core shadcn Utility Classes (guaranteed background, text, and border colors) */
+    .bg-background { background-color: var(--background) !important; }
+    .bg-card { background-color: var(--card) !important; color: var(--card-foreground); }
+    .bg-popover { background-color: var(--popover) !important; color: var(--popover-foreground); }
+    .bg-primary { background-color: var(--primary) !important; color: var(--primary-foreground); }
+    .bg-secondary { background-color: var(--secondary) !important; color: var(--secondary-foreground); }
+    .bg-muted { background-color: var(--muted) !important; color: var(--muted-foreground); }
+    .bg-accent { background-color: var(--accent) !important; color: var(--accent-foreground); }
+
+    .text-foreground { color: var(--foreground) !important; }
+    .text-muted-foreground { color: var(--muted-foreground) !important; }
+    .text-card-foreground { color: var(--card-foreground) !important; }
+    .text-primary { color: var(--primary) !important; }
+    .text-primary-foreground { color: var(--primary-foreground) !important; }
+    .text-secondary-foreground { color: var(--secondary-foreground) !important; }
+
+    .border-border { border-color: var(--border) !important; }
+    .border-input { border-color: var(--input) !important; }
+
+    /* Modal Backdrop in Light & Dark Mode */
+    .dialog-backdrop {
+      background-color: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    .dark .dialog-backdrop {
+      background-color: rgba(0, 0, 0, 0.75);
+    }
+
+    /* Modal Dialog Card */
+    .dialog-card {
+      background-color: var(--card) !important;
+      color: var(--card-foreground) !important;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+    .dark .dialog-card {
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    /* ==========================================================================
+       shadcn/ui Design Tokens (Neutral / Zinc)
+       ========================================================================== */
     :root {
       color-scheme: light;
-      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       --mono-font: "Cascadia Mono", Menlo, Monaco, "SFMono-Regular", Consolas, monospace;
 
-      /* B1_Robotic_Arm_App Clean Studio Theme Tokens */
-      --bg: #f4f6f8;
-      --surface: #ffffff;
-      --surface-raised: #eef2f6;
-      --line: #d6dde5;
-      --muted: #687587;
-      --text: #18212b;
-      --blue: #3978ff;
-      --blue-hover: #2869ef;
-      --cyan: #13a9a5;
-      --green: #21945a;
-      --amber: #ad7318;
-      --red: #d74752;
+      /* shadcn Light (Zinc / Neutral) */
+      --background: #ffffff;
+      --foreground: #09090b;
+      --card: #ffffff;
+      --card-foreground: #09090b;
+      --popover: #ffffff;
+      --popover-foreground: #09090b;
+      --primary: #18181b;
+      --primary-foreground: #fafafa;
+      --secondary: #f4f4f5;
+      --secondary-foreground: #18181b;
+      --muted: #f4f4f5;
+      --muted-foreground: #71717a;
+      --accent: #f4f4f5;
+      --accent-foreground: #18181b;
+      --destructive: #ef4444;
+      --destructive-foreground: #fafafa;
+      --border: #e4e4e7;
+      --input: #e4e4e7;
+      --ring: #18181b;
+      --radius: 0.5rem;
 
-      --titlebar-bg: #ffffff;
+      --topbar-bg: #ffffff;
       --panel-bg: #ffffff;
-      --control-bg: #ffffff;
-      --control-border: #cbd5e1;
-      --control-text: #1f3b63;
-      --control-hover-bg: #f8fafc;
-      --input-bg: #ffffff;
-      --input-border: #cbd5e1;
+      --sub-panel-bg: #f8fafc;
+      --viewport-bg: #5a646e;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    }
 
-      --surface-shadow: 0 4px 16px rgba(50, 72, 112, 0.06);
-      --card-shadow: 0 1px 3px rgba(50, 72, 112, 0.06);
-      --ease-out: cubic-bezier(.4, 0, .2, 1);
+    .dark {
+      color-scheme: dark;
+
+      /* shadcn Dark (Zinc #09090b) */
+      --background: #09090b;
+      --foreground: #fafafa;
+      --card: #09090b;
+      --card-foreground: #fafafa;
+      --popover: #0c0c0e;
+      --popover-foreground: #fafafa;
+      --primary: #fafafa;
+      --primary-foreground: #18181b;
+      --secondary: #18181b;
+      --secondary-foreground: #fafafa;
+      --muted: #1c1c1f;
+      --muted-foreground: #a1a1aa;
+      --accent: #27272a;
+      --accent-foreground: #fafafa;
+      --destructive: #7f1d1d;
+      --destructive-foreground: #fafafa;
+      --border: #27272a;
+      --input: #27272a;
+      --ring: #d4d4d8;
+      --radius: 0.5rem;
+
+      --topbar-bg: #09090b;
+      --panel-bg: #09090b;
+      --sub-panel-bg: #111113;
+      --viewport-bg: #121316;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+      --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.35);
     }
 
     * {
       box-sizing: border-box;
-      scrollbar-color: rgba(100, 116, 139, 0.34) transparent;
-      scrollbar-width: thin;
+      border-color: var(--border);
     }
 
     body {
-      background: var(--bg);
-      color: var(--text);
+      background-color: var(--background);
+      color: var(--foreground);
       margin: 0;
-      letter-spacing: 0.1px;
       overflow: hidden;
+      transition: background-color 150ms ease, color 150ms ease;
     }
 
-    /* Clean Scrollbars matching B1_Robotic_Arm_App */
-    *::-webkit-scrollbar { width: 7px; height: 7px; }
+    /* Minimalist shadcn Scrollbar */
+    *::-webkit-scrollbar { width: 6px; height: 6px; }
     *::-webkit-scrollbar-track { background: transparent; }
     *::-webkit-scrollbar-thumb {
-      border-radius: 999px;
-      background: rgba(100, 116, 139, 0.34);
-      border: 1px solid transparent;
-      background-clip: content-box;
+      border-radius: 9999px;
+      background: var(--border);
     }
-    *::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.54); }
+    *::-webkit-scrollbar-thumb:hover {
+      background: var(--muted-foreground);
+    }
 
     .font-mono { font-family: var(--mono-font) !important; }
 
-    /* Topbar & Panels - Solid rendering without backdrop-filter to eliminate screen flicker */
+    /* shadcn Topbar & Panels */
     .studio-topbar {
-      background: var(--titlebar-bg);
-      border-bottom: 1px solid var(--line);
-      box-shadow: 0 1px 3px rgba(50, 72, 112, 0.05);
+      background-color: var(--topbar-bg);
+      border-bottom: 1px solid var(--border);
+      color: var(--foreground);
     }
 
     .studio-panel {
-      background: #ffffff;
-      border-color: var(--line);
+      background-color: var(--panel-bg);
+      border-color: var(--border);
+      color: var(--foreground);
     }
 
     .studio-card {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      box-shadow: var(--card-shadow);
+      background-color: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      color: var(--card-foreground);
     }
 
-    /* Buttons inspired by B1_Robotic_Arm_App */
+    /* shadcn Buttons */
     .btn-studio-primary {
-      background: #3978ff;
-      color: #ffffff;
-      border: 1px solid #2869ef;
-      box-shadow: 0 4px 12px rgba(57, 120, 255, 0.22);
-      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: var(--radius);
+      font-size: 12px;
       font-weight: 500;
-      transition: all 140ms var(--ease-out);
+      height: 32px;
+      padding: 0 12px;
+      background-color: var(--primary);
+      color: var(--primary-foreground);
+      border: 1px solid transparent;
+      box-shadow: var(--shadow-sm);
+      transition: all 120ms ease;
       cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
     }
     .btn-studio-primary:hover:not(:disabled) {
-      background: #2869ef;
-      box-shadow: 0 6px 16px rgba(57, 120, 255, 0.3);
-      transform: translateY(-1px);
+      opacity: 0.9;
     }
     .btn-studio-primary:active:not(:disabled) {
-      transform: translateY(0);
-      box-shadow: inset 0 1px 3px rgba(50, 72, 112, 0.15);
+      transform: scale(0.98);
     }
 
     .btn-studio-secondary {
-      background: #ffffff;
-      color: #1f3b63;
-      border: 1px solid #cbd5e1;
-      box-shadow: 0 1px 2px rgba(50, 72, 112, 0.05);
-      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: var(--radius);
+      font-size: 12px;
       font-weight: 500;
-      transition: all 140ms var(--ease-out);
+      height: 32px;
+      padding: 0 12px;
+      background-color: var(--secondary);
+      color: var(--foreground);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      transition: all 120ms ease;
       cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
     }
     .btn-studio-secondary:hover:not(:disabled) {
-      background: #f8fafc;
-      border-color: #94a3b8;
-      color: #14233b;
-      transform: translateY(-1px);
+      background-color: var(--accent);
+      color: var(--accent-foreground);
     }
     .btn-studio-secondary:active:not(:disabled) {
-      transform: translateY(0);
-      box-shadow: inset 0 1px 2px rgba(50, 72, 112, 0.08);
+      transform: scale(0.98);
     }
 
     .btn-studio-ghost {
-      background: transparent;
-      color: #475569;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 500;
+      height: 28px;
+      padding: 0 8px;
+      background-color: transparent;
+      color: var(--muted-foreground);
       border: 1px solid transparent;
-      border-radius: 6px;
-      transition: all 140ms var(--ease-out);
+      transition: all 120ms ease;
       cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
     }
-    .btn-studio-ghost:hover {
-      background: #f1f5f9;
-      color: #18212b;
+    .btn-studio-ghost:hover:not(:disabled) {
+      background-color: var(--accent);
+      color: var(--foreground);
     }
 
     .btn-studio-danger {
-      background: #fff2f4;
-      color: #bd2936;
-      border: 1px solid rgba(215, 71, 82, 0.34);
-      border-radius: 6px;
-      transition: all 140ms var(--ease-out);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 500;
+      height: 32px;
+      padding: 0 12px;
+      background-color: var(--destructive);
+      color: var(--destructive-foreground);
+      border: 1px solid transparent;
+      transition: all 120ms ease;
       cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
     }
-    .btn-studio-danger:hover {
-      background: #ffe4e8;
-      border-color: rgba(215, 71, 82, 0.52);
+    .btn-studio-danger:hover:not(:disabled) {
+      opacity: 0.9;
     }
 
-    /* Inputs matching B1_Robotic_Arm_App */
+    /* shadcn Input & Select */
     .input-studio {
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      color: #18212b;
-      border-radius: 6px;
-      padding: 5px 8px;
+      display: flex;
+      height: 32px;
+      width: 100%;
+      border-radius: var(--radius);
+      border: 1px solid var(--input);
+      background-color: var(--background);
+      padding: 4px 10px;
       font-size: 12px;
-      box-shadow: inset 0 1px 2px rgba(50, 72, 112, 0.04);
-      transition: border-color 140ms var(--ease-out), box-shadow 140ms var(--ease-out);
+      color: var(--foreground);
+      transition: border-color 120ms ease, box-shadow 120ms ease;
     }
     .input-studio:focus {
-      border-color: #3978ff;
       outline: none;
-      box-shadow: 0 0 0 3px rgba(57, 120, 255, 0.15);
+      border-color: var(--ring);
+      box-shadow: 0 0 0 1px var(--ring);
     }
 
-    /* Switch Control from B1_Robotic_Arm_App */
+    /* shadcn Switch */
     .switch-control {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
       cursor: pointer;
       user-select: none;
     }
-    .switch-control input {
-      display: none;
-    }
+    .switch-control input { display: none; }
     .switch-track {
       position: relative;
       width: 32px;
       height: 18px;
-      border-radius: 999px;
-      background: #cbd5e1;
-      transition: background-color 180ms ease;
+      border-radius: 9999px;
+      background-color: var(--secondary);
+      border: 1px solid var(--border);
+      transition: background-color 150ms ease, border-color 150ms ease;
     }
     .switch-track::after {
       content: "";
       position: absolute;
       top: 2px;
       left: 2px;
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
-      background: #ffffff;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-      transition: transform 180ms ease;
+      background-color: var(--muted-foreground);
+      transition: transform 150ms ease, background-color 150ms ease;
     }
     .switch-control input:checked + .switch-track {
-      background: linear-gradient(135deg, #13aaa6, #3978ff);
+      background-color: var(--primary);
     }
     .switch-control input:checked + .switch-track::after {
+      background-color: var(--primary-foreground);
       transform: translateX(14px);
     }
 
-    /* Badges & Status Pills */
+    /* shadcn Badges */
     .pill-blue {
-      background: #eef4fb;
-      color: #1976d2;
-      border: 1px solid #c8d9ed;
-      border-radius: 4px;
-      padding: 1px 6px;
+      background-color: var(--secondary);
+      color: var(--foreground);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 1px 8px;
       font-size: 10px;
-      font-weight: 600;
+      font-weight: 500;
+      font-family: var(--mono-font);
     }
     .pill-green {
-      background: #edfcf2;
-      color: #16a34a;
-      border: 1px solid #bbf7d0;
-      border-radius: 4px;
-      padding: 1px 6px;
+      background-color: rgba(34, 197, 94, 0.12);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      border-radius: 9999px;
+      padding: 1px 8px;
       font-size: 10px;
       font-weight: 600;
+      font-family: var(--mono-font);
     }
     .pill-slate {
-      background: #f1f5f9;
-      color: #475569;
-      border: 1px solid #cbd5e1;
-      border-radius: 4px;
-      padding: 1px 6px;
+      background-color: var(--secondary);
+      color: var(--muted-foreground);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: 1px 8px;
       font-size: 10px;
       font-weight: 500;
     }
 
+    .badge-secondary {
+      display: inline-flex;
+      align-items: center;
+      border-radius: calc(var(--radius) - 2px);
+      border: 1px solid var(--border);
+      background-color: var(--secondary);
+      color: var(--muted-foreground);
+      padding: 1px 6px;
+      font-size: 10px;
+      font-family: var(--mono-font);
+      font-weight: 500;
+    }
+    .badge-outline {
+      display: inline-flex;
+      align-items: center;
+      border-radius: calc(var(--radius) - 2px);
+      border: 1px solid var(--border);
+      color: var(--foreground);
+      padding: 1px 6px;
+      font-size: 10px;
+      font-family: var(--mono-font);
+      font-weight: 500;
+    }
+    .badge-primary {
+      display: inline-flex;
+      align-items: center;
+      border-radius: calc(var(--radius) - 2px);
+      background-color: var(--primary);
+      color: var(--primary-foreground);
+      padding: 1px 6px;
+      font-size: 10px;
+      font-family: var(--mono-font);
+      font-weight: 500;
+    }
+    .badge-amber {
+      display: inline-flex;
+      align-items: center;
+      border-radius: calc(var(--radius) - 2px);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      background-color: rgba(245, 158, 11, 0.12);
+      color: #d97706;
+      padding: 1px 6px;
+      font-size: 10px;
+      font-family: var(--mono-font);
+      font-weight: 500;
+    }
+    .dark .badge-amber {
+      color: #fbbf24;
+    }
+
     .status-led {
       display: inline-block;
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: #22c55e;
       box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
     }
   </style>
 </head>
-<body class="flex flex-col h-screen select-none overflow-hidden text-slate-800">
+<body class="flex flex-col h-screen select-none overflow-hidden text-foreground bg-background">
 
   <!-- File Upload Hidden Input -->
   <input type="file" id="stepFileInput" accept=".step,.stp" class="hidden">
 
-  <!-- Drag and Drop Overlay -->
-  <div id="dropOverlay" class="fixed inset-0 bg-blue-900/40 z-50 flex flex-col items-center justify-center border-4 border-dashed border-blue-500 hidden pointer-events-none transition">
-    <div class="text-5xl mb-3">📥</div>
-    <div class="text-xl font-bold text-blue-900 bg-white/95 px-6 py-2 rounded-lg shadow-xl">松开鼠标以导入 STEP 机器人装配体</div>
-    <div class="text-sm text-blue-800 mt-2 font-medium bg-white/90 px-4 py-1 rounded">支持 STEP AP214 / AP242 标准格式 (.step, .stp)</div>
+  <!-- Drag and Drop Overlay (shadcn Precision Target) -->
+  <div id="dropOverlay" class="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center border-2 border-dashed border-primary hidden pointer-events-none transition">
+    <div class="w-14 h-14 rounded-xl bg-card flex items-center justify-center text-primary shadow-xl mb-4 border border-border">
+      <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+      </svg>
+    </div>
+    <div class="text-sm font-semibold text-foreground bg-card px-5 py-2 rounded-lg shadow-lg border border-border">释放鼠标导入 STEP 装配体</div>
+    <div class="text-xs text-muted-foreground mt-2 font-mono bg-secondary px-3 py-1 rounded border border-border">ISO 10303-21 · AP214 / AP242 (.step, .stp)</div>
   </div>
 
-  <!-- 1. Top Navigation Bar (Refactored to B1_Robotic_Arm_App Clean Studio Style) -->
-  <header class="studio-topbar px-4 py-2 flex items-center justify-between shrink-0 z-20 h-14">
+  <!-- 1. Top Navigation Bar (shadcn/ui Header) -->
+  <header class="studio-topbar px-4 flex items-center justify-between shrink-0 z-20 h-12 border-b border-border">
     <!-- Left: Brand & Product Title -->
     <div class="flex items-center space-x-3">
-      <img src="/static/icon.png" class="w-8 h-8 rounded-lg object-contain shadow-sm border border-slate-200/80 bg-white p-0.5" alt="URDForge Logo">
-      <div>
-        <div class="flex items-center space-x-2">
-          <span class="font-bold text-sm tracking-wide text-slate-900">URDForge Studio</span>
-          <span class="pill-blue">URDForge v0.2.0</span>
-        </div>
-        <div id="topHeaderFileContainer" class="text-[11px] text-slate-500 flex items-center space-x-1.5 max-w-[360px] md:max-w-[500px] lg:max-w-[650px] truncate" title="未加载模型文件">
-          <span class="text-slate-400 shrink-0 font-medium">当前文件:</span>
-          <span id="topHeaderFilePath" class="font-mono text-slate-700 font-semibold truncate">未加载模型 (点击“打开本地 STEP”加载)</span>
+      <img src="./icon.png" class="w-7 h-7 rounded-md object-contain border border-border bg-card p-0.5" alt="URDForge Logo">
+      <div class="flex items-center space-x-2.5">
+        <span class="font-semibold text-sm tracking-tight text-foreground">URDForge Studio</span>
+        <span class="px-2 py-0.5 text-[10px] font-mono font-medium rounded bg-secondary text-muted-foreground border border-border">v0.2.0</span>
+        <span class="text-border">|</span>
+        <div id="topHeaderFileContainer" class="text-xs text-muted-foreground flex items-center space-x-1.5 max-w-[340px] md:max-w-[460px] lg:max-w-[580px] truncate" title="未加载模型文件">
+          <span class="text-muted-foreground shrink-0">文件:</span>
+          <span id="topHeaderFilePath" class="font-mono text-foreground font-medium truncate">未加载模型 (点击打开 STEP)</span>
         </div>
       </div>
     </div>
@@ -286,41 +499,45 @@
     <!-- Right: Quick Action Controls -->
     <div class="flex items-center space-x-2">
       <!-- Engine Status Badge -->
-      <div class="hidden md:flex items-center space-x-2 px-2.5 py-1 rounded bg-slate-50 border border-slate-200 text-xs">
+      <div class="hidden lg:flex items-center space-x-1.5 px-2 py-1 rounded-md bg-secondary border border-border text-xs">
         <span class="status-led"></span>
-        <span class="text-slate-600 font-medium text-[11px]">CAD 内核: OpenCASCADE 7.9 (就绪)</span>
+        <span class="text-muted-foreground font-mono text-[11px]">OpenCASCADE 7.9</span>
       </div>
 
-      <!-- Open Custom Local STEP File Button -->
-      <button id="btnOpenLocalFile" class="btn-studio-secondary flex items-center space-x-1.5 text-xs px-3 py-1.5">
-        <span>📁</span>
-        <span>打开本地 STEP...</span>
+      <!-- Open STEP File Button -->
+      <button id="btnOpenLocalFile" class="btn-studio-secondary flex items-center space-x-1.5 text-xs px-2.5 py-1.5">
+        <svg class="w-3.5 h-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+        <span>打开 STEP</span>
       </button>
 
-
-
       <!-- Snapping Mode Toggle -->
-      <button id="btnToggleSnap" class="btn-studio-secondary flex items-center space-x-1 text-xs px-3 py-1.5">
-        <span id="snapIndicator" class="text-blue-600">⭕</span>
-        <span id="snapText">特征吸附模式 (关)</span>
+      <button id="btnToggleSnap" class="btn-studio-secondary flex items-center space-x-1.5 text-xs px-2.5 py-1.5">
+        <svg class="w-3.5 h-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="8" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+        <span id="snapText">特征吸附</span>
       </button>
 
       <!-- View URDF Modal Button -->
-      <button id="btnViewUrdf" class="btn-studio-secondary text-xs px-3 py-1.5 flex items-center space-x-1">
-        <span>📄</span>
-        <span>查看 URDF</span>
+      <button id="btnViewUrdf" class="btn-studio-secondary text-xs px-2.5 py-1.5 flex items-center space-x-1.5">
+        <svg class="w-3.5 h-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>URDF</span>
       </button>
 
       <!-- Global Settings Modal Button -->
-      <button id="btnOpenSettings" class="btn-studio-secondary text-xs px-3 py-1.5 flex items-center space-x-1" title="打开全局偏好设置">
-        <span>⚙️</span>
+      <button id="btnOpenSettings" class="btn-studio-secondary text-xs px-2.5 py-1.5 flex items-center space-x-1.5" title="全局偏好设置">
+        <svg class="w-3.5 h-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3" stroke-width="2"/></svg>
         <span>设置</span>
       </button>
 
-      <!-- One-Click Export ROS 2 Package Button -->
-      <button id="btnExportRos" class="btn-studio-primary text-xs px-4 py-1.5 flex items-center space-x-1.5">
-        <span>🚀</span>
-        <span>导出 ROS 2 功能包</span>
+      <!-- shadcn Theme Toggle Button -->
+      <button id="btnThemeToggle" class="btn-studio-secondary p-1.5 w-8 h-8 flex items-center justify-center text-xs" title="切换深色/浅色模式">
+        <svg id="iconSun" class="w-4 h-4 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="5" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg id="iconMoon" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+      </button>
+
+      <!-- Export ROS 2 Package Button -->
+      <button id="btnExportRos" class="btn-studio-primary text-xs px-3.5 py-1.5 flex items-center space-x-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <span>导出 ROS 2</span>
       </button>
     </div>
   </header>
@@ -329,78 +546,83 @@
   <div class="flex flex-1 overflow-hidden">
 
     <!-- LEFT PANEL: Assembly Hierarchy, Multi-part Selection & Features (320px) -->
-    <aside class="w-80 studio-panel border-r flex flex-col shrink-0 custom-scrollbar overflow-hidden z-10 bg-white">
+    <aside class="w-80 studio-panel border-r flex flex-col shrink-0 custom-scrollbar overflow-hidden z-10 bg-background">
       
       <!-- 1. CAD Assembly Tree (Top Section) -->
-      <div class="p-3 border-b border-slate-200 flex flex-col max-h-[55%]">
+      <div class="p-3 border-b border-border flex flex-col max-h-[55%]">
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center space-x-1.5">
-            <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">装配体部件树 (CAD TREE)</span>
-            <span id="partCountBadge" class="pill-blue font-mono">0 部件</span>
+            <span class="text-xs font-semibold text-foreground uppercase tracking-wide">装配体部件树 (CAD TREE)</span>
+            <span id="partCountBadge" class="px-1.5 py-0.5 text-[10px] font-mono font-medium rounded bg-secondary text-muted-foreground border border-border">0 件</span>
           </div>
           <div class="flex items-center space-x-1">
-            <button id="btnCollapseAllTree" title="全部折叠" class="text-[11px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200">收起</button>
-            <button id="btnExpandAllTree" title="全部展开" class="text-[11px] px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200">展开</button>
+            <button id="btnCollapseAllTree" title="全部折叠" class="btn-studio-ghost text-[11px] px-2 py-0.5 h-6">收起</button>
+            <button id="btnExpandAllTree" title="全部展开" class="btn-studio-ghost text-[11px] px-2 py-0.5 h-6">展开</button>
           </div>
         </div>
 
         <!-- Search Filter -->
-        <div class="mb-2">
-          <input type="text" id="inputFilterParts" placeholder="🔍 搜索零件名称..." class="w-full input-studio">
+        <div class="mb-2 relative">
+          <input type="text" id="inputFilterParts" placeholder="搜索零件名称..." class="w-full input-studio pl-7 text-xs">
+          <svg class="w-3.5 h-3.5 text-muted-foreground absolute left-2 top-2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
         </div>
 
         <!-- Multi-Selection Action Bar -->
-        <div class="flex items-center justify-between mb-2 px-2 text-[11px] text-slate-600 bg-slate-50 p-1.5 rounded border border-slate-200">
+        <div class="flex items-center justify-between mb-2 px-2 text-[11px] text-muted-foreground bg-secondary/60 p-1.5 rounded-md border border-border">
           <div class="flex items-center space-x-1.5">
-            <span>已选: <b id="selectedPartCount" class="text-blue-600 font-mono font-bold">0</b></span>
-            <button id="btnSelectAllParts" class="text-slate-600 hover:text-blue-600 underline">全选</button>
-            <button id="btnClearPartSelection" class="text-slate-400 hover:text-slate-600 underline">清空</button>
+            <span>已选: <b id="selectedPartCount" class="text-primary font-mono font-semibold">0</b></span>
+            <button id="btnSelectAllParts" class="text-muted-foreground hover:text-foreground underline">全选</button>
+            <button id="btnClearPartSelection" class="text-muted-foreground hover:text-foreground underline">清空</button>
           </div>
           <div class="flex items-center space-x-1">
-            <button id="btnCreateLinkFromChecked" class="btn-studio-primary text-white font-medium text-[11px] px-2 py-0.5 rounded shadow-sm" title="以勾选的零件创建新连杆">
-              ➕ 创建 Link
+            <button id="btnCreateLinkFromChecked" class="btn-studio-primary text-[11px] px-2 py-0.5 h-6" title="以勾选的零件创建新连杆">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span>创建 Link</span>
             </button>
-            <button id="btnAssignPartsToActiveLink" class="btn-studio-secondary text-[11px] px-2 py-0.5 rounded" title="将勾选的零件追加到当前 Link">
-              📥 分配零件
+            <button id="btnAssignPartsToActiveLink" class="btn-studio-secondary text-[11px] px-2 py-0.5 h-6" title="将勾选的零件追加到当前 Link">
+              <svg class="w-3 h-3 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+              <span>分配零件</span>
             </button>
           </div>
         </div>
 
         <!-- Assembly Tree Nodes Container -->
         <div id="assemblyTreeContainer" class="flex-1 overflow-y-auto space-y-0.5 text-xs custom-scrollbar pr-1">
-          <div class="text-slate-400 text-center py-6">请打开本地 STEP CAD 模型<br><span class="text-[11px] text-slate-400">点击上方「打开本地 STEP...」或拖入文件</span></div>
+          <div class="text-muted-foreground text-center py-6 text-xs">请打开本地 STEP CAD 模型<br><span class="text-[11px] text-muted-foreground">点击上方「打开 STEP」或拖入文件</span></div>
         </div>
       </div>
 
       <!-- 2. Candidate Geometric Features (Collapsible Bottom Section) -->
-      <div class="flex-1 flex flex-col p-3 border-t border-slate-200 overflow-hidden bg-slate-50/50">
-        <div class="flex items-center justify-between mb-1.5 cursor-pointer select-none bg-white p-2 rounded border border-slate-200 shadow-sm transition hover:bg-slate-50" id="toggleFeaturesSection">
+      <div class="flex-1 flex flex-col p-3 border-t border-border overflow-hidden bg-secondary/30">
+        <div class="flex items-center justify-between mb-1.5 cursor-pointer select-none bg-card p-2 rounded-md border border-border shadow-xs transition hover:bg-accent" id="toggleFeaturesSection">
           <div class="flex items-center space-x-1.5">
-            <span id="featuresSectionArrow" class="text-blue-600 text-xs font-bold">▶</span>
-            <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">几何特征 (FEATURES)</span>
-            <span id="featureCountBadge" class="pill-blue font-mono">0 特征</span>
+            <span id="featuresSectionArrow" class="text-foreground text-xs font-semibold">▶</span>
+            <span class="text-xs font-semibold text-foreground uppercase tracking-wide">几何特征 (FEATURES)</span>
+            <span id="featureCountBadge" class="px-1.5 py-0.5 text-[10px] font-mono font-medium rounded bg-secondary text-muted-foreground border border-border">0</span>
           </div>
-          <span class="text-[10px] text-blue-600 font-medium">[展开/收起]</span>
+          <span class="text-[10px] text-muted-foreground font-medium">[折叠/展开]</span>
         </div>
 
         <div id="featuresCollapsibleBody" class="flex-1 flex flex-col overflow-hidden hidden">
           <!-- Filter Controls -->
           <div class="flex items-center space-x-1 mb-1.5">
-            <input type="text" id="inputFilterFeatures" placeholder="🔍 过滤特征(零件名/圆柱)..." class="flex-1 input-studio text-[11px] py-1">
-            <button id="btnFilterBySelectedPart" class="text-[10px] px-2 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shrink-0 font-medium">仅选中件</button>
-            <button id="btnToggleAllPartGroups" class="text-[10px] px-1.5 py-1 rounded bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 shrink-0 font-medium" title="全部展开/折叠零件特征组">全部折叠</button>
+            <input type="text" id="inputFilterFeatures" placeholder="过滤特征(零件名/圆柱)..." class="flex-1 input-studio text-[11px] py-1">
+            <button id="btnFilterBySelectedPart" class="btn-studio-secondary text-[10px] px-2 py-1 h-7">仅选中件</button>
+            <button id="btnToggleAllPartGroups" class="btn-studio-secondary text-[10px] px-1.5 py-1 h-7" title="全部展开/折叠零件特征组">全部折叠</button>
           </div>
-          <p class="text-[10px] text-slate-500 mb-1 leading-snug">点击零件展开特征，点击特征吸附对齐旋转轴或中心点：</p>
+          <p class="text-[10px] text-muted-foreground mb-1 leading-snug">点击零件展开特征，点击特征吸附对齐旋转轴或中心点：</p>
           <div id="featuresListContainer" class="flex-1 space-y-1.5 overflow-y-auto custom-scrollbar pr-1">
-            <div class="text-slate-400 text-center py-3 text-xs">尚未检测到特征</div>
+            <div class="text-muted-foreground text-center py-3 text-xs">尚未检测到特征</div>
           </div>
         </div>
       </div>
 
     </aside>
 
-    <!-- CENTER VIEWPORT: Three.js 3D Viewport with B1_Robotic_Arm_App Studio Theme -->
-    <main id="viewportContainer" class="flex-1 relative overflow-hidden flex flex-col" style="background: #68727a;">
+    <!-- CENTER VIEWPORT: Three.js 3D Viewport with shadcn Theme -->
+    <main id="viewportContainer" class="flex-1 relative overflow-hidden flex flex-col" style="background: var(--viewport-bg);">
       <div id="viewport3d" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
 
       <!-- Floating World Coordinate Orientation Gizmo (Bottom-Left) -->
@@ -408,27 +630,26 @@
         <canvas id="worldGizmoCanvas" width="84" height="84" class="pointer-events-none" style="width: 84px; height: 84px;"></canvas>
       </div>
 
-      <!-- Floating 3D Viewport Toolbar (Top-Right, matching B1_Robotic_Arm_App) -->
+      <!-- Floating 3D Viewport Toolbar (Top-Right shadcn Card Group) -->
       <div class="absolute top-3 right-3 flex items-center space-x-2 z-10">
-        <!-- Coordinate Frames Toggle Switch (as in B1_Robotic_Arm_App index.html:65-69) -->
-        <label class="switch-control coordinate-switch bg-white/95 border border-slate-300 px-3 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700" title="在3D模型中显示全部关节与世界坐标系 (RGB 粗箭头三轴)">
+        <!-- Coordinate Frames Toggle Switch -->
+        <label class="switch-control coordinate-switch bg-card/90 backdrop-blur border border-border px-2.5 py-1.5 rounded-md shadow-xs text-xs font-medium text-foreground" title="在 3D 模型中显示各关节与世界坐标系三轴 (X红 Y绿 Z蓝)">
           <input id="coordinate-frames-toggle" type="checkbox" checked>
           <span class="switch-track"></span>
           <span>坐标轴</span>
         </label>
 
         <!-- CoM and Inertia Visuals Toggle Switch -->
-        <label class="switch-control coordinate-switch bg-white/95 border border-slate-300 px-2.5 py-1.5 rounded-lg shadow-md text-xs font-semibold text-slate-700 cursor-pointer" title="在3D模型中直观显示各连杆的质心球 (CoM) 与等效惯量方块 (Inertia Box)">
+        <label class="switch-control coordinate-switch bg-card/90 backdrop-blur border border-border px-2.5 py-1.5 rounded-md shadow-xs text-xs font-medium text-foreground cursor-pointer" title="显示连杆质心球 (CoM) 与等效惯量张量方块">
           <input id="toggle-inertia-viz" type="checkbox">
           <span class="switch-track"></span>
-          <span>⚖️ 质心与惯量</span>
+          <span>质心与惯量</span>
         </label>
 
-
-        <!-- CAD Source Benchmark Plane / Up-Axis Converter (True Backend + URDF Sync) -->
-        <div class="bg-white/95 border border-slate-300 px-2.5 py-1 rounded-lg shadow-md flex items-center space-x-1.5 text-xs font-semibold text-slate-700" title="将 CAD 模型原始基准面真实转换到 URDF/ROS 的 XY 地面 (Z 轴向上)，同步更新 3D 视图、特征轴向与导出 URDF">
-          <span>📐</span>
-          <select id="selectCadUpAxis" class="bg-transparent font-semibold text-slate-700 focus:outline-none cursor-pointer">
+        <!-- CAD Source Benchmark Plane / Up-Axis Converter -->
+        <div class="bg-card/90 backdrop-blur border border-border px-2.5 py-1 rounded-md shadow-xs flex items-center space-x-1.5 text-xs font-medium text-foreground" title="CAD 基准面变换 (Z 向上)">
+          <span class="text-muted-foreground font-mono text-[11px]">基准:</span>
+          <select id="selectCadUpAxis" class="bg-transparent font-medium text-foreground focus:outline-none cursor-pointer">
             <option value="Y">SolidWorks (Y→Z)</option>
             <option value="Z">CAD原坐标 (Z朝上)</option>
             <option value="-Y">反向 (-Y→Z)</option>
@@ -436,127 +657,131 @@
         </div>
 
         <!-- Reset Camera View Button -->
-        <button id="btnResetCamera" class="btn-studio-secondary bg-white/95 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 shadow-md flex items-center space-x-1" title="重置相机视角">
-          <span>🎯</span>
+        <button id="btnResetCamera" class="btn-studio-secondary bg-card/90 px-2.5 py-1.5 rounded-md text-xs font-medium text-foreground shadow-xs flex items-center space-x-1" title="重置相机视角">
+          <svg class="w-3.5 h-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
           <span>居中视角</span>
         </button>
 
         <!-- FK Sliders Floating Window Toggle Button -->
-        <button id="btnToggleFKPanel" class="btn-studio-secondary bg-white/95 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-600 border border-blue-300 bg-blue-50/80 shadow-md flex items-center space-x-1.5 transition hover:shadow-lg" title="打开/关闭前向运动学调试浮窗">
-          <span>🎮</span>
+        <button id="btnToggleFKPanel" class="btn-studio-secondary bg-card/90 px-2.5 py-1.5 rounded-md text-xs font-medium text-foreground border border-border shadow-xs flex items-center space-x-1.5" title="打开/关闭前向运动学调试浮窗">
+          <svg class="w-3.5 h-3.5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
           <span>运动学调试</span>
         </button>
       </div>
 
-      <!-- Floating FK Sliders Window (Draggable & Collapsible) -->
-      <div id="fkFloatingPanel" class="absolute bottom-4 right-4 z-20 w-80 bg-white/95 backdrop-blur-md border border-slate-300 rounded-xl shadow-2xl flex flex-col overflow-hidden transition-shadow duration-200 select-none">
+      <!-- Floating FK Sliders Window (Draggable & Collapsible shadcn Card) -->
+      <div id="fkFloatingPanel" class="absolute bottom-4 right-4 z-20 w-80 bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden transition-shadow duration-150 select-none">
         <!-- Window Header / Drag Handle -->
-        <div id="fkPanelHeader" class="px-3 py-2 bg-slate-100/90 hover:bg-slate-100 transition border-b border-slate-200 flex items-center justify-between cursor-move">
+        <div id="fkPanelHeader" class="px-3 py-2 bg-secondary border-b border-border flex items-center justify-between cursor-move">
           <div class="flex items-center space-x-1.5 pointer-events-none">
-            <span class="text-xs">🎮</span>
-            <span class="text-xs font-bold text-slate-800 tracking-wide">前向运动学调试 (FK)</span>
-            <span id="fkJointCountBadge" class="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-700 font-mono font-bold">0</span>
+            <svg class="w-3.5 h-3.5 text-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+            <span class="text-xs font-semibold text-foreground tracking-tight">前向运动学调试 (FK)</span>
+            <span id="fkJointCountBadge" class="text-[10px] px-1.5 py-0.2 rounded bg-card text-muted-foreground border border-border font-mono font-medium">0</span>
           </div>
           <div class="flex items-center space-x-1 pointer-events-auto">
-            <button id="btnResetFK" class="text-[11px] text-blue-600 hover:text-blue-800 font-semibold px-1.5 py-0.5 rounded hover:bg-blue-50 transition" title="将所有关节角度复位到 0">回零位</button>
-            <button id="btnMinimizeFK" class="text-slate-400 hover:text-slate-700 font-bold px-1.5 py-0.5 rounded hover:bg-slate-200 leading-none text-xs" title="折叠/展开">−</button>
-            <button id="btnCloseFK" class="text-slate-400 hover:text-rose-600 font-bold px-1.5 py-0.5 rounded hover:bg-rose-50 leading-none text-sm" title="关闭浮窗">&times;</button>
+            <button id="btnResetFK" class="btn-studio-ghost text-[11px] h-6 px-1.5" title="所有关节角度复位到 0">回零位</button>
+            <button id="btnMinimizeFK" class="text-muted-foreground hover:text-foreground font-bold px-1.5 py-0.5 rounded leading-none text-xs" title="折叠/展开">−</button>
+            <button id="btnCloseFK" class="text-muted-foreground hover:text-destructive font-bold px-1.5 py-0.5 rounded leading-none text-sm" title="关闭">&times;</button>
           </div>
         </div>
 
         <!-- Window Body: Sliders Container -->
         <div id="fkPanelBody" class="p-3 max-h-72 overflow-y-auto custom-scrollbar space-y-2">
           <div id="fkSlidersContainer" class="space-y-2">
-            <div class="text-slate-400 text-center py-4 text-xs font-mono">
+            <div class="text-muted-foreground text-center py-4 text-xs font-mono">
               暂无活动关节
-              <div class="text-[11px] text-slate-400 mt-0.5 font-sans">（创建连杆与关节后在此实时调试）</div>
+              <div class="text-[11px] text-muted-foreground mt-0.5 font-sans">创建连杆与关节后可在此实时调试</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Snapping Prompt Toast (Bottom-Center) -->
-      <div id="snapToast" class="absolute bottom-5 left-1/2 -translate-x-1/2 bg-white/95 border-2 border-blue-500 px-4 py-2 rounded-full shadow-2xl text-xs text-slate-800 flex items-center space-x-2 transition opacity-0 pointer-events-none z-10">
-        <span class="text-blue-600 font-bold">🎯 已拾取特征:</span>
-        <span id="snapToastText" class="font-semibold text-slate-900"></span>
-        <button id="btnQuickSnapMidpoint" class="ml-2 btn-studio-primary text-white font-bold px-3 py-1 rounded-full text-[11px] pointer-events-auto">
-          一键设为关节原点与旋转轴
+      <!-- Snapping Prompt Toast (Bottom-Center shadcn Toast) -->
+      <div id="snapToast" class="absolute bottom-5 left-1/2 -translate-x-1/2 bg-card border border-border px-4 py-2.5 rounded-lg shadow-2xl text-xs text-foreground flex items-center space-x-2 transition opacity-0 pointer-events-none z-10">
+        <svg class="w-4 h-4 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="8" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M12 2v4m0 12v4M2 12h4m12 0h4"/></svg>
+        <span class="font-medium text-muted-foreground">已吸附特征:</span>
+        <span id="snapToastText" class="font-mono text-foreground font-semibold"></span>
+        <button id="btnQuickSnapMidpoint" class="ml-2 btn-studio-primary text-[11px] px-2.5 py-1 h-7 pointer-events-auto shadow-xs">
+          设为关节原点与轴向
         </button>
       </div>
     </main>
 
     <!-- RIGHT PANEL: URDF Hierarchy, Link Inspector, Joint Snapping & FK Sliders (380px) -->
-    <aside class="w-96 studio-panel border-l flex flex-col shrink-0 custom-scrollbar overflow-y-auto z-10 bg-white">
+    <aside class="w-96 studio-panel border-l flex flex-col shrink-0 custom-scrollbar overflow-y-auto z-10 bg-background">
       
       <!-- SECTION 1: URDF Kinematic Tree (starting from base_link) -->
-      <div class="p-3 border-b border-slate-200">
+      <div class="p-3 border-b border-border">
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center space-x-1.5">
-            <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">机器人结构树 (URDF HIERARCHY)</span>
+            <span class="text-xs font-semibold text-foreground uppercase tracking-wide">机器人结构树 (URDF HIERARCHY)</span>
             <span id="linkCountBadge" class="pill-blue font-mono">1 Link</span>
           </div>
-          <button id="btnOpenAddLinkModal" class="btn-studio-primary text-white text-[11px] px-2.5 py-1 rounded shadow-sm flex items-center space-x-1">
-            <span>➕</span>
-            <span>添加子连杆 (Link)</span>
+          <button id="btnOpenAddLinkModal" class="btn-studio-primary text-[11px] px-2.5 py-1 flex items-center space-x-1">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>添加连杆 (Link)</span>
           </button>
         </div>
 
-        <p class="text-[11px] text-slate-500 mb-2">从 <code class="text-blue-600 font-mono font-bold bg-blue-50 px-1 py-0.5 rounded border border-blue-200">base_link</code> 开始构建拓扑结构，点击选中连杆以分配零件：</p>
+        <p class="text-[11px] text-muted-foreground mb-2">从 <code class="text-foreground font-mono font-medium bg-secondary px-1.5 py-0.5 rounded border border-border">base_link</code> 开始构建拓扑结构，点击选中连杆以分配零件：</p>
         <div id="urdfLinksHierarchyContainer" class="space-y-1.5 text-xs">
           <!-- Dynamically populated link hierarchy starting from base_link -->
         </div>
       </div>
 
       <!-- SECTION 2: Active Link Inspector & Assigned Parts -->
-      <div class="p-3 border-b border-slate-200 bg-slate-50/70">
+      <div class="p-3 border-b border-border bg-secondary/30">
         <div class="flex items-center justify-between mb-2">
           <div class="flex items-center space-x-1.5">
-            <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">连杆属性与零件归属 (LINK INSPECTOR)</span>
+            <span class="text-xs font-semibold text-foreground uppercase tracking-wide">连杆属性与零件归属 (LINK INSPECTOR)</span>
           </div>
-          <span id="activeLinkBadge" class="text-[11px] px-2.5 py-0.5 rounded bg-blue-100 text-blue-700 font-mono font-bold border border-blue-300">base_link</span>
+          <span id="activeLinkBadge" class="pill-blue font-mono font-semibold">base_link</span>
         </div>
 
         <div class="space-y-2 text-xs">
           <!-- Link Name Edit / Rename -->
-          <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-2xs space-y-1">
-            <label class="text-[10px] text-slate-500 font-medium block">连杆名称 (Link Name):</label>
+          <div class="bg-card p-2 rounded-lg border border-border space-y-1">
+            <label class="text-[10px] text-muted-foreground font-medium block">连杆名称 (Link Name):</label>
             <div class="flex items-center space-x-1.5">
               <input type="text" id="inputEditLinkName" class="flex-1 input-studio font-mono text-xs py-1" placeholder="连杆名称...">
-              <button id="btnApplyLinkRename" class="btn-studio-primary text-white text-[10px] px-2.5 py-1 rounded shrink-0 shadow-2xs font-medium" title="修改并应用此连杆名称">修改名称</button>
+              <button id="btnApplyLinkRename" class="btn-studio-primary text-[10px] px-2.5 py-1 shrink-0 font-medium" title="修改并应用此连杆名称">修改名称</button>
             </div>
           </div>
 
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="text-[11px] font-medium text-slate-600">该 Link 包含的 CAD 零件 (<span id="assignedPartsCountText" class="font-bold text-slate-800">0</span> 个)</label>
-              <button id="btnClearLinkParts" class="text-[10px] text-rose-600 hover:text-rose-700 font-medium">清空全部</button>
+              <label class="text-[11px] font-medium text-muted-foreground">该 Link 包含的 CAD 零件 (<span id="assignedPartsCountText" class="font-semibold text-foreground">0</span> 个)</label>
+              <button id="btnClearLinkParts" class="text-[10px] text-destructive hover:underline font-medium">清空全部</button>
             </div>
-            <div id="assignedPartsChipsContainer" class="flex flex-wrap gap-1 p-2 bg-white rounded border border-slate-200 min-h-[46px] max-h-32 overflow-y-auto custom-scrollbar shadow-inner">
-              <span class="text-slate-400 text-[11px] m-auto">未分配零件（从左侧勾选零件并点击分配）</span>
+            <div id="assignedPartsChipsContainer" class="flex flex-wrap gap-1 p-2 bg-card rounded-md border border-border min-h-[46px] max-h-32 overflow-y-auto custom-scrollbar">
+              <span class="text-muted-foreground text-[11px] m-auto">未分配零件（从左侧勾选零件并点击分配）</span>
             </div>
           </div>
 
           <!-- Composite Physical Properties Card -->
-          <div class="studio-card p-3 space-y-2 bg-white">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-1.5">
-              <span class="text-[11px] font-bold text-slate-800">复合刚体物性 (Composite Physics)</span>
+          <div class="studio-card p-3 space-y-2">
+            <div class="flex justify-between items-center border-b border-border pb-1.5">
+              <span class="text-[11px] font-semibold text-foreground">复合刚体物性</span>
               <div class="flex items-center space-x-1">
                 <span id="physicsBadge" class="pill-green">PASS</span>
-                <button id="btnRecalculateAllPhysics" class="text-[10px] text-emerald-700 hover:text-emerald-900 border border-emerald-300 px-1.5 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 transition flex items-center space-x-0.5 font-medium" title="重新从零件几何精确计算所有连杆的质心与3×3惯量张量并与3D模型严格对齐">
-                  <span>🔄</span>
-                  <span>重算物性</span>
+                <button id="btnRecalculateAllPhysics" class="btn-studio-secondary text-[10px] px-1.5 py-0.5 h-6" title="重新从几何精确计算质心与惯量张量">
+                  <svg class="w-3 h-3 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                  <span>重算</span>
                 </button>
-                <button id="btnToggleManualPhysics" class="text-[10px] text-blue-600 hover:text-blue-800 border border-blue-200 px-1.5 py-0.5 rounded bg-blue-50/50 hover:bg-blue-100 transition" title="手动输入/覆写连杆质量与惯性张量">✏️ 覆写物性</button>
+                <button id="btnToggleManualPhysics" class="btn-studio-secondary text-[10px] px-1.5 py-0.5 h-6" title="手动输入/覆写连杆质量与惯性张量">
+                  <svg class="w-3 h-3 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                  <span>覆写</span>
+                </button>
               </div>
             </div>
 
             <!-- Readonly Summary View -->
-            <div id="compositePhysicsDetails" class="space-y-1 text-slate-700 text-[11px]">
-              <div class="flex justify-between"><span class="text-slate-500">总质量 (Mass):</span><span id="physMass" class="font-bold text-slate-900">0.0000 kg</span></div>
-              <div class="flex justify-between"><span class="text-slate-500">质心 CoM (相对Link原点):</span><span id="physCoM" class="font-mono text-blue-600 font-medium">[0.000, 0.000, 0.000] m</span></div>
+            <div id="compositePhysicsDetails" class="space-y-1 text-[11px] text-foreground">
+              <div class="flex justify-between"><span class="text-muted-foreground">总质量 (Mass):</span><span id="physMass" class="font-semibold text-foreground">0.0000 kg</span></div>
+              <div class="flex justify-between"><span class="text-muted-foreground">质心 CoM (相对Link原点):</span><span id="physCoM" class="font-mono text-primary font-medium">[0.000, 0.000, 0.000] m</span></div>
               <div>
-                <span class="text-slate-500 block mb-1">3×3 复合惯性张量 (kg·m²):</span>
-                <div id="physInertiaGrid" class="grid grid-cols-3 gap-0.5 font-mono text-[9px] text-center bg-slate-50 p-1.5 rounded border border-slate-200 text-slate-800">
+                <span class="text-muted-foreground block mb-1">3×3 复合惯性张量 (kg·m²):</span>
+                <div id="physInertiaGrid" class="grid grid-cols-3 gap-0.5 font-mono text-[9px] text-center bg-secondary p-1.5 rounded-md border border-border text-foreground">
                   <div>0.00e+0</div><div>0.00e+0</div><div>0.00e+0</div>
                   <div>0.00e+0</div><div>0.00e+0</div><div>0.00e+0</div>
                   <div>0.00e+0</div><div>0.00e+0</div><div>0.00e+0</div>
@@ -565,17 +790,17 @@
             </div>
 
             <!-- Manual Override Form (Collapsible) -->
-            <div id="manualPhysicsForm" class="hidden space-y-2 pt-2 border-t border-blue-100 bg-blue-50/40 p-2 rounded-lg">
-              <div class="flex justify-between items-center text-[10px] font-bold text-blue-800">
+            <div id="manualPhysicsForm" class="hidden space-y-2 pt-2 border-t border-border bg-secondary/60 p-2.5 rounded-lg">
+              <div class="flex justify-between items-center text-[10px] font-semibold text-foreground">
                 <span>📝 手动覆写连杆物性 (Inertial Override)</span>
-                <span id="manualOverrideStatus" class="text-slate-400 font-normal">自定义</span>
+                <span id="manualOverrideStatus" class="text-muted-foreground font-normal">自定义</span>
               </div>
               <div>
-                <label class="text-[10px] text-slate-600 block mb-0.5">总质量 (Mass, kg):</label>
+                <label class="text-[10px] text-muted-foreground block mb-0.5">总质量 (Mass, kg):</label>
                 <input type="number" step="0.0001" id="inputManualMass" class="w-full input-studio font-mono text-xs" placeholder="0.001">
               </div>
               <div>
-                <label class="text-[10px] text-slate-600 block mb-0.5">质心偏移 CoM (X, Y, Z 单位: m):</label>
+                <label class="text-[10px] text-muted-foreground block mb-0.5">质心偏移 CoM (X, Y, Z 单位: m):</label>
                 <div class="grid grid-cols-3 gap-1">
                   <input type="number" step="0.001" id="inputManualComX" class="input-studio font-mono text-center text-xs" placeholder="X">
                   <input type="number" step="0.001" id="inputManualComY" class="input-studio font-mono text-center text-xs" placeholder="Y">
@@ -583,7 +808,7 @@
                 </div>
               </div>
               <div>
-                <label class="text-[10px] text-slate-600 block mb-0.5">主惯量对角项 (Ixx, Iyy, Izz, kg·m²):</label>
+                <label class="text-[10px] text-muted-foreground block mb-0.5">主惯量对角项 (Ixx, Iyy, Izz, kg·m²):</label>
                 <div class="grid grid-cols-3 gap-1">
                   <input type="number" step="1e-6" id="inputManualIxx" class="input-studio font-mono text-center text-[10px]" placeholder="Ixx">
                   <input type="number" step="1e-6" id="inputManualIyy" class="input-studio font-mono text-center text-[10px]" placeholder="Iyy">
@@ -591,7 +816,7 @@
                 </div>
               </div>
               <div>
-                <label class="text-[10px] text-slate-600 block mb-0.5">互惯量 (Ixy, Ixz, Iyz, kg·m²):</label>
+                <label class="text-[10px] text-muted-foreground block mb-0.5">互惯量 (Ixy, Ixz, Iyz, kg·m²):</label>
                 <div class="grid grid-cols-3 gap-1">
                   <input type="number" step="1e-6" id="inputManualIxy" class="input-studio font-mono text-center text-[10px]" placeholder="Ixy">
                   <input type="number" step="1e-6" id="inputManualIxz" class="input-studio font-mono text-center text-[10px]" placeholder="Ixz">
@@ -599,11 +824,11 @@
                 </div>
               </div>
               <div class="grid grid-cols-2 gap-1.5 pt-1">
-                <button id="btnSaveManualPhysics" class="btn-studio-primary text-white text-[10px] py-1.5 flex items-center justify-center space-x-1">
+                <button id="btnSaveManualPhysics" class="btn-studio-primary text-[10px] py-1.5 flex items-center justify-center space-x-1">
                   <span>💾</span>
                   <span>保存物性覆写</span>
                 </button>
-                <button id="btnResetAutoPhysics" class="btn-studio-secondary text-slate-700 text-[10px] py-1.5 flex items-center justify-center space-x-1" title="清除覆写，重新使用 CAD 几何自动计算">
+                <button id="btnResetAutoPhysics" class="btn-studio-secondary text-[10px] py-1.5 flex items-center justify-center space-x-1" title="清除覆写，重新使用 CAD 几何自动计算">
                   <span>🔄</span>
                   <span>恢复 CAD 计算</span>
                 </button>
@@ -614,20 +839,20 @@
       </div>
 
       <!-- SECTION 3: Joint Editor & Feature Snapping (Origin & Axis) -->
-      <div class="p-3 border-b border-slate-200">
+      <div class="p-3 border-b border-border">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-bold text-slate-800 uppercase tracking-wide">关节配置与特征吸附 (JOINT EDITOR)</span>
+          <span class="text-xs font-semibold text-foreground uppercase tracking-wide">关节配置与特征吸附 (JOINT EDITOR)</span>
           <span id="activeJointBadge" class="pill-slate">未选择</span>
         </div>
 
         <div class="space-y-2.5 text-xs">
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-[11px] text-slate-600 block mb-0.5">关节名称 (Joint Name)</label>
+              <label class="text-[11px] text-muted-foreground block mb-0.5">关节名称 (Joint Name)</label>
               <input type="text" id="inputJointName" value="joint_1" class="w-full input-studio font-mono">
             </div>
             <div>
-              <label class="text-[11px] text-slate-600 block mb-0.5">关节类型 (Type)</label>
+              <label class="text-[11px] text-muted-foreground block mb-0.5">关节类型 (Type)</label>
               <select id="selectJointType" class="w-full input-studio">
                 <option value="revolute">revolute (带限位旋转)</option>
                 <option value="continuous">continuous (无限制连续旋转)</option>
@@ -639,78 +864,78 @@
 
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-[11px] text-slate-600 block mb-0.5">父级 Link (Parent)</label>
+              <label class="text-[11px] text-muted-foreground block mb-0.5">父级 Link (Parent)</label>
               <select id="selectParentLink" class="w-full input-studio"></select>
             </div>
             <div>
-              <label class="text-[11px] text-slate-600 block mb-0.5">子级 Link (Child)</label>
+              <label class="text-[11px] text-muted-foreground block mb-0.5">子级 Link (Child)</label>
               <select id="selectChildLink" class="w-full input-studio"></select>
             </div>
           </div>
 
           <!-- Feature Snapping Box (Preview Triad shown in 3D Viewport) -->
-          <div id="snappingToolsCard" class="studio-card p-3 space-y-2 bg-blue-50/50 border-blue-200">
+          <div id="snappingToolsCard" class="studio-card p-3 space-y-2 bg-secondary/40 border-border">
             <div class="flex justify-between items-center text-[11px]">
-              <span class="text-blue-700 font-bold flex items-center space-x-1">
+              <span class="text-foreground font-semibold flex items-center space-x-1">
                 <span>🎯</span>
                 <span>几何特征一键吸附对齐:</span>
               </span>
-              <span id="activeSnapFeatName" class="text-slate-500 font-medium truncate max-w-[140px]">未选择特征</span>
+              <span id="activeSnapFeatName" class="text-muted-foreground font-medium truncate max-w-[140px]">未选择特征</span>
             </div>
 
             <!-- Snapping Origin Choices -->
             <div class="flex items-center space-x-1">
-              <span class="text-[10px] text-slate-500 shrink-0">建立坐标原点:</span>
-              <button id="btnSnapMidpoint" title="圆柱/特征几何中心点" class="flex-1 btn-studio-secondary text-[10px] py-1">🎯 中心点</button>
-              <button id="btnSnapTop" title="圆柱顶端面中心" class="flex-1 btn-studio-secondary text-[10px] py-1">⬆️ 顶端</button>
-              <button id="btnSnapBot" title="圆柱底端面中心" class="flex-1 btn-studio-secondary text-[10px] py-1">⬇️ 底端</button>
+              <span class="text-[10px] text-muted-foreground shrink-0">建立原点:</span>
+              <button id="btnSnapMidpoint" title="圆柱/特征几何中心点" class="flex-1 btn-studio-secondary text-[10px] py-1 h-7">🎯 中心点</button>
+              <button id="btnSnapTop" title="圆柱顶端面中心" class="flex-1 btn-studio-secondary text-[10px] py-1 h-7">⬆️ 顶端</button>
+              <button id="btnSnapBot" title="圆柱底端面中心" class="flex-1 btn-studio-secondary text-[10px] py-1 h-7">⬇️ 底端</button>
             </div>
 
             <!-- Snapping Rotation Axis Choices -->
             <div class="space-y-1">
-              <div class="flex items-center justify-between text-[10px] text-slate-500">
+              <div class="flex items-center justify-between text-[10px] text-muted-foreground">
                 <span>吸附对齐轴向 (旋转轴):</span>
-                <span class="text-blue-600 font-medium">自动换算父连杆坐标系</span>
+                <span class="text-primary font-medium">自动换算父连杆坐标系</span>
               </div>
               <div class="grid grid-cols-4 gap-1">
-                <button id="btnSnapAxisZ" type="button" title="以特征轴线作为旋转轴 (对齐到坐标系 Z 向)" class="btn-studio-primary text-white text-[10px] py-1">🧭 对齐为 Z</button>
-                <button id="btnSnapAxisY" type="button" title="以特征轴线对齐到坐标系 Y 向" class="btn-studio-secondary text-[10px] py-1">🧭 对齐为 Y</button>
-                <button id="btnSnapAxisX" type="button" title="以特征轴线对齐到坐标系 X 向" class="btn-studio-secondary text-[10px] py-1">🧭 对齐为 X</button>
-                <button id="btnFlipAxis" type="button" title="翻转 180 度 (轴向反转)" class="btn-studio-secondary text-[10px] py-1">↺ 翻转</button>
+                <button id="btnSnapAxisZ" type="button" title="以特征轴线作为旋转轴 (对齐到坐标系 Z 向)" class="btn-studio-primary text-[10px] py-1 h-7">🧭 对齐为 Z</button>
+                <button id="btnSnapAxisY" type="button" title="以特征轴线对齐到坐标系 Y 向" class="btn-studio-secondary text-[10px] py-1 h-7">🧭 对齐为 Y</button>
+                <button id="btnSnapAxisX" type="button" title="以特征轴线对齐到坐标系 X 向" class="btn-studio-secondary text-[10px] py-1 h-7">🧭 对齐为 X</button>
+                <button id="btnFlipAxis" type="button" title="翻转 180 度 (轴向反转)" class="btn-studio-secondary text-[10px] py-1 h-7">↺ 翻转</button>
               </div>
             </div>
           </div>
 
-          <!-- Rotation Axis (Axis XYZ) Settings (Request 10 Image 1) -->
-          <div class="studio-card p-2.5 bg-slate-50/80 border border-slate-200 space-y-1.5">
+          <!-- Rotation Axis (Axis XYZ) Settings -->
+          <div class="studio-card p-2.5 bg-secondary/30 border border-border space-y-1.5">
             <div class="flex justify-between items-center">
-              <label class="text-[11px] font-bold text-slate-700 flex items-center space-x-1">
+              <label class="text-[11px] font-semibold text-foreground flex items-center space-x-1">
                 <span>🔄</span>
                 <span>旋转轴向 (Axis XYZ, 关节旋转主轴)</span>
               </label>
-              <span class="text-[10px] text-slate-400 font-mono">urdf: axis</span>
+              <span class="text-[10px] text-muted-foreground font-mono">urdf: axis</span>
             </div>
             <!-- Quick Presets -->
             <div class="grid grid-cols-6 gap-1">
-              <button type="button" id="btnPresetAxisPZ" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded border font-mono font-bold bg-blue-600 text-white border-blue-600 shadow-2xs" data-axis="0,0,1">+Z (常用)</button>
-              <button type="button" id="btnPresetAxisNZ" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded border font-mono bg-white text-slate-700 border-slate-300 hover:bg-slate-100" data-axis="0,0,-1">-Z</button>
-              <button type="button" id="btnPresetAxisPY" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded border font-mono bg-white text-slate-700 border-slate-300 hover:bg-slate-100" data-axis="0,1,0">+Y</button>
-              <button type="button" id="btnPresetAxisNY" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded border font-mono bg-white text-slate-700 border-slate-300 hover:bg-slate-100" data-axis="0,-1,0">-Y</button>
-              <button type="button" id="btnPresetAxisPX" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded border font-mono bg-white text-slate-700 border-slate-300 hover:bg-slate-100" data-axis="1,0,0">+X</button>
-              <button type="button" id="btnPresetAxisNX" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded border font-mono bg-white text-slate-700 border-slate-300 hover:bg-slate-100" data-axis="-1,0,0">-X</button>
+              <button type="button" id="btnPresetAxisPZ" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded-md border font-mono font-semibold bg-primary text-primary-foreground border-primary shadow-xs" data-axis="0,0,1">+Z (常用)</button>
+              <button type="button" id="btnPresetAxisNZ" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded-md border font-mono bg-card text-foreground border-border hover:bg-accent" data-axis="0,0,-1">-Z</button>
+              <button type="button" id="btnPresetAxisPY" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded-md border font-mono bg-card text-foreground border-border hover:bg-accent" data-axis="0,1,0">+Y</button>
+              <button type="button" id="btnPresetAxisNY" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded-md border font-mono bg-card text-foreground border-border hover:bg-accent" data-axis="0,-1,0">-Y</button>
+              <button type="button" id="btnPresetAxisPX" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded-md border font-mono bg-card text-foreground border-border hover:bg-accent" data-axis="1,0,0">+X</button>
+              <button type="button" id="btnPresetAxisNX" class="axis-preset-btn px-1 py-0.5 text-[10px] rounded-md border font-mono bg-card text-foreground border-border hover:bg-accent" data-axis="-1,0,0">-X</button>
             </div>
             <!-- Numeric inputs for Axis XYZ -->
             <div class="grid grid-cols-3 gap-1.5 pt-0.5">
               <div>
-                <label class="text-[9px] text-slate-400 block text-center">X 轴向分量</label>
+                <label class="text-[9px] text-muted-foreground block text-center">X 轴向分量</label>
                 <input type="number" step="0.1" id="axisX" value="0.0" class="input-studio text-center font-mono text-xs">
               </div>
               <div>
-                <label class="text-[9px] text-slate-400 block text-center">Y 轴向分量</label>
+                <label class="text-[9px] text-muted-foreground block text-center">Y 轴向分量</label>
                 <input type="number" step="0.1" id="axisY" value="0.0" class="input-studio text-center font-mono text-xs">
               </div>
               <div>
-                <label class="text-[9px] text-slate-400 block text-center">Z 轴向分量</label>
+                <label class="text-[9px] text-muted-foreground block text-center">Z 轴向分量</label>
                 <input type="number" step="0.1" id="axisZ" value="1.0" class="input-studio text-center font-mono text-xs">
               </div>
             </div>
@@ -719,8 +944,8 @@
           <!-- Origin Coordinates (XYZ in meters) -->
           <div>
             <div class="flex justify-between items-center mb-0.5">
-              <label class="text-[11px] text-slate-600 font-medium">关节原点 (Origin XYZ, 单位: m)</label>
-              <span class="text-[10px] text-blue-600 font-medium">相对于父级连杆</span>
+              <label class="text-[11px] text-muted-foreground font-medium">关节原点 (Origin XYZ, 单位: m)</label>
+              <span class="text-[10px] text-primary font-medium">相对于父级连杆</span>
             </div>
             <div class="grid grid-cols-3 gap-1.5">
               <input type="number" step="0.001" id="originX" placeholder="X" value="0.0" class="input-studio text-center font-mono">
@@ -732,8 +957,8 @@
           <!-- Origin Orientation (RPY in degrees) -->
           <div>
             <div class="flex justify-between items-center mb-0.5">
-              <label class="text-[11px] text-slate-600 font-medium">旋转朝向 (RPY 欧拉角, 单位: °)</label>
-              <span class="text-[10px] text-slate-400">X:红, Y:绿, Z:蓝</span>
+              <label class="text-[11px] text-muted-foreground font-medium">旋转朝向 (RPY 欧拉角, 单位: °)</label>
+              <span class="text-[10px] text-muted-foreground">X:红, Y:绿, Z:蓝</span>
             </div>
             <div class="grid grid-cols-3 gap-1.5">
               <input type="number" step="1" id="rpyR" placeholder="Roll(X)" value="0" class="input-studio text-center font-mono">
@@ -745,27 +970,27 @@
           <!-- Limits -->
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label id="labelLimitLower" class="text-[11px] text-slate-600 block mb-0.5">下限位 (Lower, °)</label>
+              <label id="labelLimitLower" class="text-[11px] text-muted-foreground block mb-0.5">下限位 (Lower, °)</label>
               <input type="number" step="any" id="limitLower" value="-180" placeholder="例如: -180 或 0" class="w-full input-studio font-mono">
             </div>
             <div>
-              <label id="labelLimitUpper" class="text-[11px] text-slate-600 block mb-0.5">上限位 (Upper, °)</label>
+              <label id="labelLimitUpper" class="text-[11px] text-muted-foreground block mb-0.5">上限位 (Upper, °)</label>
               <input type="number" step="any" id="limitUpper" value="180" placeholder="例如: 180 或 0.0005" class="w-full input-studio font-mono">
             </div>
           </div>
 
-          <button id="btnSaveJoint" class="w-full btn-studio-primary text-white font-medium py-2 rounded shadow-sm text-xs flex items-center justify-center space-x-1">
+          <button id="btnSaveJoint" class="w-full btn-studio-primary text-xs py-2 shadow-xs">
             <span>💾</span>
             <span>保存/更新该关节</span>
           </button>
 
-          <!-- Joint Deletion and Clear All Buttons (Request 2) -->
+          <!-- Joint Deletion and Clear All Buttons -->
           <div class="grid grid-cols-2 gap-2 pt-1">
-            <button id="btnDeleteCurrentJoint" class="btn-studio-secondary text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200 py-1.5 rounded text-xs flex items-center justify-center space-x-1" title="删除当前选中的关节">
+            <button id="btnDeleteCurrentJoint" class="btn-studio-secondary text-destructive hover:bg-destructive/10 text-xs py-1.5" title="删除当前选中的关节">
               <span>🗑️</span>
               <span>删除该关节</span>
             </button>
-            <button id="btnClearAllJoints" class="btn-studio-secondary text-slate-600 hover:text-rose-600 hover:bg-slate-100 py-1.5 rounded text-xs flex items-center justify-center space-x-1" title="一键清除模型中所有关节，方便重新构建拓扑">
+            <button id="btnClearAllJoints" class="btn-studio-secondary text-muted-foreground hover:text-destructive text-xs py-1.5" title="一键清除模型中所有关节，方便重新构建拓扑">
               <span>🧹</span>
               <span>清空全部关节</span>
             </button>
@@ -777,78 +1002,78 @@
 
   </div>
 
-  <!-- 3. URDF Modal Window (Clean Light Dialog & Live In-Place Editor) -->
-  <div id="urdfModal" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center hidden">
-    <div class="bg-white border border-slate-300 rounded-lg w-3/4 max-w-4xl h-4/5 flex flex-col shadow-2xl overflow-hidden">
-      <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+  <!-- 3. URDF Modal Window (shadcn Dialog & Live In-Place Editor) -->
+  <div id="urdfModal" class="fixed inset-0 dialog-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="dialog-card rounded-xl w-3/4 max-w-4xl h-4/5 flex flex-col overflow-hidden">
+      <div class="px-5 py-3 border-b border-border flex items-center justify-between bg-card text-card-foreground">
         <div class="flex items-center space-x-2">
           <span class="text-base">📄</span>
-          <span class="font-bold text-sm text-slate-900">仿真就绪 URDF XML 预览与在线编辑</span>
-          <span class="text-[10px] text-slate-500 font-mono">(支持实时修改并应用到模型)</span>
+          <span class="font-semibold text-sm text-foreground">仿真就绪 URDF XML 预览与在线编辑</span>
+          <span class="text-[10px] text-muted-foreground font-mono">(实时修改并应用到模型)</span>
         </div>
         <div class="flex items-center space-x-2">
-          <button id="btnApplyUrdfEdit" class="btn-studio-primary text-white text-xs px-3 py-1.5 flex items-center space-x-1 font-medium shadow-xs" title="将编辑后的 URDF XML 应用到当前机器人模型并重新计算运动学与复合刚体物性">
+          <button id="btnApplyUrdfEdit" class="btn-studio-primary text-xs px-3 py-1.5 flex items-center space-x-1" title="保存修改并重新计算">
             <span>💾</span>
             <span>保存并应用修改</span>
           </button>
           <button id="btnResetUrdfXml" class="btn-studio-secondary text-xs px-2.5 py-1.5" title="重新从模型生成最新 URDF XML">🔄 重新生成</button>
           <button id="btnCopyUrdf" class="btn-studio-secondary text-xs px-2.5 py-1.5">📋 复制内容</button>
-          <button id="btnCloseUrdfModal" class="text-slate-500 hover:text-slate-900 text-xl font-bold leading-none px-2">&times;</button>
+          <button id="btnCloseUrdfModal" class="text-muted-foreground hover:text-foreground text-xl font-bold leading-none px-2">&times;</button>
         </div>
       </div>
-      <div class="flex-1 p-2 bg-slate-900 flex flex-col min-h-0">
-        <textarea id="urdfCodeTextarea" spellcheck="false" class="w-full flex-1 p-3 font-mono text-xs text-emerald-300 bg-slate-950 border border-slate-800 rounded resize-none focus:outline-none focus:border-blue-500 selection:bg-blue-800 selection:text-white leading-relaxed custom-scrollbar" placeholder="正在加载 URDF XML..."></textarea>
+      <div class="flex-1 p-2 bg-secondary/80 flex flex-col min-h-0">
+        <textarea id="urdfCodeTextarea" spellcheck="false" class="w-full flex-1 p-3 font-mono text-xs text-foreground bg-background border border-border rounded-lg resize-none focus:outline-none focus:border-primary leading-relaxed custom-scrollbar" placeholder="正在加载 URDF XML..."></textarea>
       </div>
     </div>
   </div>
 
-  <!-- 4. Add Link & Joint Wizard Modal Dialog (Clean Light Dialog) -->
-  <div id="addLinkModal" class="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center hidden">
-    <div class="bg-white border border-slate-300 rounded-xl w-[480px] max-w-full p-5 flex flex-col shadow-2xl space-y-3.5">
-      <div class="flex justify-between items-center border-b border-slate-200 pb-2.5">
+  <!-- 4. Add Link & Joint Wizard Modal Dialog (shadcn Dialog) -->
+  <div id="addLinkModal" class="fixed inset-0 dialog-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="dialog-card rounded-xl w-[480px] max-w-full p-5 flex flex-col space-y-4">
+      <div class="flex justify-between items-center border-b border-border pb-2.5">
         <div class="flex items-center space-x-2">
           <span class="text-base">➕</span>
-          <span class="text-sm font-bold text-slate-900">创建连杆与关节 (Create Link & Joint)</span>
+          <span class="text-sm font-semibold text-foreground">创建连杆与关节 (Create Link & Joint)</span>
         </div>
-        <button id="btnCloseAddLinkModal" class="text-slate-400 hover:text-slate-700 text-xl font-bold leading-none">&times;</button>
+        <button id="btnCloseAddLinkModal" class="text-muted-foreground hover:text-foreground text-xl font-bold leading-none">&times;</button>
       </div>
 
       <!-- 1. Link Section -->
       <div class="space-y-2">
         <div class="flex justify-between items-center">
-          <label class="text-[11px] font-bold text-slate-700">连杆基础属性 (Link Settings)</label>
+          <label class="text-[11px] font-semibold text-foreground">连杆基础属性 (Link Settings)</label>
           <span id="modalAssignedCountText" class="pill-blue font-mono">0 个已选零件</span>
         </div>
         <div>
-          <label class="text-[11px] text-slate-600 block mb-0.5">连杆名称 (Link Name)</label>
-          <input type="text" id="modalInputLinkName" value="link_1" placeholder="例如: link_1, arm_link" class="w-full input-studio">
+          <label class="text-[11px] text-muted-foreground block mb-0.5">连杆名称 (Link Name)</label>
+          <input type="text" id="modalInputLinkName" value="link_1" placeholder="例如: link_1, arm_link" class="w-full input-studio font-mono">
         </div>
         <div>
-          <label class="text-[11px] text-slate-600 block mb-0.5">包含的 CAD 零件 (Assigned Parts)</label>
-          <div id="modalPartsChipsContainer" class="flex flex-wrap gap-1 p-1.5 bg-slate-50 rounded border border-slate-200 max-h-20 overflow-y-auto custom-scrollbar text-[10px]">
-            <span class="text-slate-400 m-auto">未选择零件（从左侧勾选）</span>
+          <label class="text-[11px] text-muted-foreground block mb-0.5">包含的 CAD 零件 (Assigned Parts)</label>
+          <div id="modalPartsChipsContainer" class="flex flex-wrap gap-1 p-2 bg-secondary/50 rounded-md border border-border max-h-20 overflow-y-auto custom-scrollbar text-[10px]">
+            <span class="text-muted-foreground m-auto">未选择零件（从左侧勾选）</span>
           </div>
         </div>
       </div>
 
       <!-- 2. Joint Section (Optional toggle) -->
-      <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 space-y-2.5">
+      <div class="p-3 rounded-lg bg-secondary/30 border border-border space-y-2.5">
         <div class="flex items-center justify-between">
-          <label class="flex items-center space-x-2 text-[11px] font-bold text-slate-800 cursor-pointer select-none">
-            <input type="checkbox" id="modalChkCreateJoint" checked class="rounded border-slate-300 text-blue-600 focus:ring-0">
+          <label class="flex items-center space-x-2 text-[11px] font-semibold text-foreground cursor-pointer select-none">
+            <input type="checkbox" id="modalChkCreateJoint" checked class="rounded border-border text-primary focus:ring-0">
             <span>同时创建连接到父级的 Joint (推荐)</span>
           </label>
-          <span class="text-[10px] text-slate-500">[取消即同意不创建关节]</span>
+          <span class="text-[10px] text-muted-foreground">[取消即不创建关节]</span>
         </div>
 
-        <div id="modalJointOptionsBody" class="space-y-2 pt-1 border-t border-slate-200 text-xs">
+        <div id="modalJointOptionsBody" class="space-y-2 pt-1 border-t border-border text-xs">
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-[11px] text-slate-600 block mb-0.5">父级 Link (Parent)</label>
+              <label class="text-[11px] text-muted-foreground block mb-0.5">父级 Link (Parent)</label>
               <select id="modalSelectParentLink" class="w-full input-studio"></select>
             </div>
             <div>
-              <label class="text-[11px] text-slate-600 block mb-0.5">关节类型 (Joint Type)</label>
+              <label class="text-[11px] text-muted-foreground block mb-0.5">关节类型 (Joint Type)</label>
               <select id="modalSelectJointType" class="w-full input-studio">
                 <option value="revolute">revolute (带限位旋转)</option>
                 <option value="continuous">continuous (无限制连续旋转)</option>
@@ -859,75 +1084,75 @@
           </div>
 
           <!-- Feature Alignment & Axis Guide in Modal -->
-          <div class="bg-blue-50/60 border border-blue-200 p-2.5 rounded space-y-1.5">
+          <div class="bg-secondary/60 border border-border p-2.5 rounded-md space-y-1.5">
             <div class="flex justify-between items-center text-[10px]">
-              <span class="text-blue-700 font-bold">🧭 旋转轴与坐标系对齐:</span>
-              <span id="modalFeatStatus" class="text-slate-600 truncate max-w-[180px]">未拾取几何特征 (使用默认原点与Z轴)</span>
+              <span class="text-foreground font-semibold">🧭 旋转轴与坐标系对齐:</span>
+              <span id="modalFeatStatus" class="text-muted-foreground truncate max-w-[180px]">未拾取几何特征 (默认原点与Z轴)</span>
             </div>
             <div class="flex items-center space-x-1 pt-0.5">
-              <button id="modalBtnSnapMidpoint" type="button" class="flex-1 btn-studio-secondary text-[10px] py-1">🎯 圆柱中心点</button>
-              <button id="modalBtnSnapAxis" type="button" class="flex-1 btn-studio-primary text-white text-[10px] py-1">🧭 对齐中心轴向</button>
-              <button id="modalBtnClearSnap" type="button" class="btn-studio-ghost text-slate-600 text-[10px] px-2 py-1">重置默认</button>
+              <button id="modalBtnSnapMidpoint" type="button" class="flex-1 btn-studio-secondary text-[10px] py-1 h-7">🎯 圆柱中心点</button>
+              <button id="modalBtnSnapAxis" type="button" class="flex-1 btn-studio-primary text-[10px] py-1 h-7">🧭 对齐中心轴向</button>
+              <button id="modalBtnClearSnap" type="button" class="btn-studio-ghost text-[10px] px-2 py-1 h-7">重置默认</button>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="pt-2 flex justify-end space-x-2 border-t border-slate-200">
+      <div class="pt-2 flex justify-end space-x-2 border-t border-border">
         <button id="btnCancelAddLink" class="btn-studio-secondary px-3.5 py-1.5 text-xs">取消</button>
-        <button id="btnConfirmAddLink" class="btn-studio-primary text-white px-5 py-1.5 text-xs">确认创建</button>
+        <button id="btnConfirmAddLink" class="btn-studio-primary px-5 py-1.5 text-xs">确认创建</button>
       </div>
     </div>
   </div>
 
-  <!-- 4.5. Kinematic Disconnection / Orphan Link Warning Modal Dialog (Request 1) -->
-  <div id="kinematicWarningModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-amber-300 animate-in fade-in zoom-in-95 duration-150">
-      <div class="px-5 py-4 bg-amber-50 border-b border-amber-200 flex items-center justify-between">
-        <div class="flex items-center space-x-2.5 text-amber-900">
-          <div class="w-8 h-8 rounded-full bg-amber-100 border border-amber-300 flex items-center justify-center shrink-0 text-base shadow-2xs">
+  <!-- 4.5. Kinematic Warning Modal Dialog (shadcn Alert Dialog) -->
+  <div id="kinematicWarningModal" class="fixed inset-0 dialog-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="dialog-card rounded-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div class="px-5 py-4 bg-secondary/50 border-b border-border flex items-center justify-between text-card-foreground">
+        <div class="flex items-center space-x-2.5 text-foreground">
+          <div class="w-8 h-8 rounded-full bg-destructive/15 border border-destructive/30 flex items-center justify-center shrink-0 text-base">
             ⚠️
           </div>
           <div>
-            <h3 id="kinematicWarningTitle" class="text-sm font-bold text-amber-900 leading-tight">运动学断链警告 (Kinematic Warning)</h3>
-            <p class="text-[11px] text-amber-700">操作将导致部分连杆失去所属父级</p>
+            <h3 id="kinematicWarningTitle" class="text-sm font-semibold text-foreground leading-tight">运动学断链警告 (Kinematic Warning)</h3>
+            <p class="text-[11px] text-muted-foreground">操作将导致部分连杆失去所属父级</p>
           </div>
         </div>
-        <button id="btnCloseKinematicWarningModal" type="button" class="text-slate-400 hover:text-slate-700 text-xl leading-none p-1 rounded hover:bg-amber-100 transition">&times;</button>
+        <button id="btnCloseKinematicWarningModal" type="button" class="text-muted-foreground hover:text-foreground text-xl leading-none p-1 rounded transition">&times;</button>
       </div>
 
-      <div class="p-5 space-y-3.5 text-xs">
-        <p id="kinematicWarningMessage" class="text-slate-700 leading-relaxed font-medium">
+      <div class="p-5 space-y-3.5 text-xs text-foreground bg-card">
+        <p id="kinematicWarningMessage" class="text-foreground leading-relaxed font-medium">
           该操作将导致以下连杆与父级/根连杆断开连接：
         </p>
 
         <!-- Orphan Links Badges Container -->
-        <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5">
-          <div class="flex items-center justify-between text-[11px] text-amber-800 font-semibold">
+        <div class="p-3 bg-secondary/50 border border-border rounded-xl space-y-1.5">
+          <div class="flex items-center justify-between text-[11px] text-foreground font-semibold">
             <span>受影响断链的连杆 (Orphan Links):</span>
-            <span id="kinematicWarningAffectedCount" class="font-mono text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded text-[10px]">0 个</span>
+            <span id="kinematicWarningAffectedCount" class="font-mono text-destructive bg-destructive/15 px-2 py-0.5 rounded text-[10px]">0 个</span>
           </div>
           <div id="kinematicWarningLinksContainer" class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pt-1">
             <!-- Dynamically populated -->
           </div>
         </div>
 
-        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600 space-y-1">
-          <div class="font-semibold text-slate-700 flex items-center space-x-1">
+        <div class="p-3 bg-secondary/30 border border-border rounded-xl text-[11px] text-muted-foreground space-y-1">
+          <div class="font-semibold text-foreground flex items-center space-x-1">
             <span>💡</span>
             <span>后果说明与影响：</span>
           </div>
-          <p id="kinematicWarningExplanation" class="text-slate-500 leading-relaxed">
+          <p id="kinematicWarningExplanation" class="text-muted-foreground leading-relaxed">
             断开连接的连杆将无法参与前向运动学 (FK) 仿真，也不会跟随父级运动。您稍后可在树状图中选中这些独立连杆并为其重新配置关节。
           </p>
         </div>
       </div>
 
-      <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end space-x-2">
-        <button id="btnCancelKinematicWarning" type="button" class="btn-studio-secondary px-4 py-2 text-xs text-slate-700 hover:bg-slate-200 font-medium">
-          取消操作 (Cancel)
+      <div class="px-5 py-3.5 bg-secondary/30 border-t border-border flex justify-end space-x-2">
+        <button id="btnCancelKinematicWarning" type="button" class="btn-studio-secondary px-4 py-2 text-xs font-medium">
+          取消操作
         </button>
-        <button id="btnProceedKinematicWarning" type="button" class="px-4 py-2 text-xs font-semibold rounded-lg bg-amber-600 hover:bg-amber-700 text-white shadow-sm transition flex items-center space-x-1">
+        <button id="btnProceedKinematicWarning" type="button" class="btn-studio-danger px-4 py-2 text-xs font-medium">
           <span>⚠️</span>
           <span id="kinematicWarningProceedText">仍要继续 (Proceed)</span>
         </button>
@@ -935,45 +1160,45 @@
     </div>
   </div>
 
-  <!-- 5. Settings Modal (Request 3, 4, 5) -->
-  <div id="settingsModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center hidden">
-    <div class="bg-white border border-slate-300 rounded-xl w-full max-w-xl flex flex-col shadow-2xl overflow-hidden">
+  <!-- 5. Settings Modal (shadcn Dialog) -->
+  <div id="settingsModal" class="fixed inset-0 dialog-backdrop z-50 flex items-center justify-center p-4 hidden">
+    <div class="dialog-card rounded-xl w-full max-w-xl flex flex-col overflow-hidden">
       <!-- Header -->
-      <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+      <div class="px-5 py-3.5 border-b border-border flex items-center justify-between bg-card text-card-foreground">
         <div class="flex items-center space-x-2">
           <span class="text-lg">⚙️</span>
-          <span class="font-bold text-sm text-slate-900">系统与偏好设置 (Studio Preferences)</span>
+          <span class="font-semibold text-sm text-foreground">系统与偏好设置 (Studio Preferences)</span>
         </div>
-        <button id="btnCloseSettingsModal" class="text-slate-400 hover:text-slate-800 text-xl font-bold leading-none px-2 py-0.5 rounded">&times;</button>
+        <button id="btnCloseSettingsModal" class="text-muted-foreground hover:text-foreground text-xl font-bold leading-none px-2 py-0.5 rounded">&times;</button>
       </div>
 
       <!-- Content -->
-      <div class="p-5 overflow-y-auto max-h-[75vh] space-y-5 text-xs text-slate-700 custom-scrollbar">
+      <div class="p-5 overflow-y-auto max-h-[75vh] space-y-5 text-xs text-foreground bg-card custom-scrollbar">
 
         <!-- Group 1: 提示弹窗与二次确认 -->
         <div class="space-y-3">
-          <h3 class="font-bold text-xs uppercase tracking-wide text-slate-800 flex items-center space-x-1.5 pb-1 border-b border-slate-200">
+          <h3 class="font-semibold text-xs uppercase tracking-wide text-foreground flex items-center space-x-1.5 pb-1 border-b border-border">
             <span>⏱️</span>
             <span>通知弹窗与确认行为 (Notification & Dialogs)</span>
           </h3>
 
-          <!-- Toast Duration Setting (per User Request 5) -->
-          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+          <!-- Toast Duration Setting -->
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40 border border-border">
             <div>
-              <div class="font-bold text-slate-800">提示弹窗显示时间 (倒计时)</div>
-              <div class="text-[11px] text-slate-500">非阻塞操作提示（如创建Link成功）自动消失前的持续时长</div>
+              <div class="font-medium text-foreground">提示弹窗显示时间 (倒计时)</div>
+              <div class="text-[11px] text-muted-foreground">非阻塞操作提示（如创建Link成功）自动消失前的持续时长</div>
             </div>
             <div class="flex items-center space-x-2">
-              <input type="range" id="settingToastDurationSlider" min="1" max="10" step="0.5" value="3.5" class="w-24 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-              <span id="settingToastDurationVal" class="font-mono font-bold text-blue-600 w-10 text-right">3.5s</span>
+              <input type="range" id="settingToastDurationSlider" min="1" max="10" step="0.5" value="3.5" class="w-24 h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary">
+              <span id="settingToastDurationVal" class="font-mono font-semibold text-primary w-10 text-right">3.5s</span>
             </div>
           </div>
 
-          <!-- Confirm Delete Joint Setting (per User Request 4) -->
-          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+          <!-- Confirm Delete Joint Setting -->
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40 border border-border">
             <div>
-              <div class="font-bold text-slate-800">清除/删除 Joint 时进行二次确认</div>
-              <div class="text-[11px] text-slate-500">开启后删除关节或一键清空全部关节时会弹出二次确认窗口</div>
+              <div class="font-medium text-foreground">清除/删除 Joint 时进行二次确认</div>
+              <div class="text-[11px] text-muted-foreground">开启后删除关节或一键清空全部关节时会弹出二次确认窗口</div>
             </div>
             <label class="switch-control">
               <input type="checkbox" id="settingConfirmDeleteJoint" checked>
@@ -982,10 +1207,10 @@
           </div>
 
           <!-- Confirm Delete Link Setting -->
-          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40 border border-border">
             <div>
-              <div class="font-bold text-slate-800">删除 Link 时进行二次确认</div>
-              <div class="text-[11px] text-slate-500">开启后删除连杆及其关联子关节时会要求用户确认</div>
+              <div class="font-medium text-foreground">删除 Link 时进行二次确认</div>
+              <div class="text-[11px] text-muted-foreground">开启后删除连杆及其关联子关节时会要求用户确认</div>
             </div>
             <label class="switch-control">
               <input type="checkbox" id="settingConfirmDeleteLink" checked>
@@ -994,10 +1219,10 @@
           </div>
 
           <!-- Confirm Clear Parts Setting -->
-          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40 border border-border">
             <div>
-              <div class="font-bold text-slate-800">清空 Link 包含的零件时进行二次确认</div>
-              <div class="text-[11px] text-slate-500">开启后点击“清空全部”零件时会弹出确认提示</div>
+              <div class="font-medium text-foreground">清空 Link 包含的零件时进行二次确认</div>
+              <div class="text-[11px] text-muted-foreground">开启后点击“清空全部”零件时会弹出确认提示</div>
             </div>
             <label class="switch-control">
               <input type="checkbox" id="settingConfirmClearParts" checked>
@@ -1008,33 +1233,33 @@
 
         <!-- Group 2: 3D 视口与显示辅助 -->
         <div class="space-y-3">
-          <h3 class="font-bold text-xs uppercase tracking-wide text-slate-800 flex items-center space-x-1.5 pb-1 border-b border-slate-200">
+          <h3 class="font-semibold text-xs uppercase tracking-wide text-foreground flex items-center space-x-1.5 pb-1 border-b border-border">
             <span>🌐</span>
             <span>3D 视口与辅助标识 (3D Viewport & Visuals)</span>
           </h3>
 
-          <!-- World Up Axis Setting (Default: Z-Up) -->
-          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+          <!-- World Up Axis Setting -->
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40 border border-border">
             <div>
-              <div class="font-bold text-slate-800">世界坐标系向上轴向 (World Up Axis)</div>
-              <div class="text-[11px] text-slate-500">机器人标准 (ROS REP-103 / URDF / RViz) 默认规定 Z 轴垂直向上；亦可切换为传统图形学 Y 轴向上</div>
+              <div class="font-medium text-foreground">世界坐标系向上轴向 (World Up Axis)</div>
+              <div class="text-[11px] text-muted-foreground">ROS REP-103 机器人标准规定 Z 轴垂直向上；亦可切换为传统图形学 Y 轴向上</div>
             </div>
             <div>
-              <select id="settingWorldUpAxis" class="input-studio text-xs font-mono font-bold py-1 px-2">
+              <select id="settingWorldUpAxis" class="input-studio text-xs font-mono font-medium py-1 px-2">
                 <option value="Z">Z 轴向上 (ROS/机器人标准)</option>
-                <option value="Y">Y 轴向上 (三维图形学标准)</option>
+                <option value="Y">Y 轴向上 (图形学标准)</option>
               </select>
             </div>
           </div>
 
-          <!-- CAD Source Up-Axis Default (SolidWorks Y-up -> URDF Z-up) -->
-          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+          <!-- CAD Source Up-Axis Default -->
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40 border border-border">
             <div>
-              <div class="font-bold text-slate-800">CAD 导入源向上轴向 / 基准面适配 (CAD Source Up Axis)</div>
-              <div class="text-[11px] text-slate-500">SolidWorks 默认以 ZX 为上视基准面 (+Y 向上)，选择「SolidWorks (+Y→+Z)」会在解析与导出 URDF 时绕 X 旋转 +90° 自动对齐 XY 地面</div>
+              <div class="font-medium text-foreground">CAD 导入源向上轴向 / 基准面适配 (CAD Source Up Axis)</div>
+              <div class="text-[11px] text-muted-foreground">SolidWorks 默认以 ZX 为上视基准面 (+Y 向上)，选择「SolidWorks」自动旋转对齐 XY 地面</div>
             </div>
             <div>
-              <select id="settingCadSourceUpAxis" class="input-studio text-xs font-mono font-bold py-1 px-2">
+              <select id="settingCadSourceUpAxis" class="input-studio text-xs font-mono font-medium py-1 px-2">
                 <option value="Y">SolidWorks (+Y→+Z, +90°)</option>
                 <option value="Z">标准 Z 轴向上 (不旋转)</option>
                 <option value="-Y">反向 (-Y→+Z, -90°)</option>
@@ -1042,10 +1267,10 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40 border border-border">
             <div>
-              <div class="font-bold text-slate-800">显示场景原点世界坐标系 (World 0,0,0)</div>
-              <div class="text-[11px] text-slate-500">在 3D 画布原点渲染世界坐标系三轴及原点标牌</div>
+              <div class="font-medium text-foreground">显示场景原点世界坐标系 (World 0,0,0)</div>
+              <div class="text-[11px] text-muted-foreground">在 3D 画布原点渲染世界坐标系三轴及原点标牌</div>
             </div>
             <label class="switch-control">
               <input type="checkbox" id="settingShowWorldAxes" checked>
@@ -1053,10 +1278,10 @@
             </label>
           </div>
 
-          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40 border border-border">
             <div>
-              <div class="font-bold text-slate-800">显示左下角世界坐标系方向指示罗盘</div>
-              <div class="text-[11px] text-slate-500">在画布左下角显示随视角联动的透明三向指示坐标</div>
+              <div class="font-medium text-foreground">显示左下角世界坐标系指示罗盘</div>
+              <div class="text-[11px] text-muted-foreground">在画布左下角显示随视角联动的透明三向指示坐标</div>
             </div>
             <label class="switch-control">
               <input type="checkbox" id="settingShowWorldGizmo" checked>
@@ -1067,19 +1292,19 @@
 
         <!-- Group 3: 刚体物性与计算参数 -->
         <div class="space-y-3">
-          <h3 class="font-bold text-xs uppercase tracking-wide text-slate-800 flex items-center space-x-1.5 pb-1 border-b border-slate-200">
+          <h3 class="font-semibold text-xs uppercase tracking-wide text-foreground flex items-center space-x-1.5 pb-1 border-b border-border">
             <span>⚖️</span>
             <span>物理计算与材料默认值 (Physics & Materials)</span>
           </h3>
 
-          <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-secondary/40 border border-border">
             <div>
-              <div class="font-bold text-slate-800">默认材料密度 (Default Density)</div>
-              <div class="text-[11px] text-slate-500">用于无质量预设时由体积推导质量惯量（结构钢约 7850 kg/m³，铝约 2700 kg/m³）</div>
+              <div class="font-medium text-foreground">默认材料密度 (Default Density)</div>
+              <div class="text-[11px] text-muted-foreground">用于由几何体积推导质量惯量（结构钢约 7850 kg/m³，铝约 2700 kg/m³）</div>
             </div>
             <div class="flex items-center space-x-1 font-mono">
               <input type="number" id="settingDefaultDensity" value="7850" class="input-studio w-24 text-center font-bold">
-              <span class="text-[10px] text-slate-500">kg/m³</span>
+              <span class="text-[10px] text-muted-foreground">kg/m³</span>
             </div>
           </div>
         </div>
@@ -1087,33 +1312,86 @@
       </div>
 
       <!-- Footer Buttons -->
-      <div class="px-5 py-3 border-t border-slate-200 flex items-center justify-between bg-slate-50">
-        <button id="btnResetSettingsDefault" class="btn-studio-ghost text-xs text-slate-600 hover:text-slate-900 font-semibold">恢复默认设置</button>
+      <div class="px-5 py-3 border-t border-border flex items-center justify-between bg-card">
+        <button id="btnResetSettingsDefault" class="btn-studio-ghost text-xs text-muted-foreground hover:text-foreground font-medium">恢复默认设置</button>
         <div class="flex items-center space-x-2">
           <button id="btnCancelSettings" class="btn-studio-secondary text-xs px-3 py-1.5">取消</button>
-          <button id="btnSaveSettings" class="btn-studio-primary text-white text-xs px-4 py-1.5 font-bold shadow-sm">保存并应用</button>
+          <button id="btnSaveSettings" class="btn-studio-primary text-xs px-4 py-1.5 font-medium shadow-xs">保存并应用</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- B1-Style Countdown Toast Notification Container (Request 5) -->
-  <div id="noticeToast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur-md border border-slate-300 rounded-xl shadow-2xl flex flex-col overflow-hidden transition-all duration-200 select-none min-w-[340px] max-w-lg hidden" role="status" aria-live="polite">
+  <!-- Countdown Toast Notification Container (shadcn Toast) -->
+  <div id="noticeToast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-card/95 backdrop-blur-md border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden transition-all duration-200 select-none min-w-[340px] max-w-lg hidden" role="status" aria-live="polite">
     <div class="px-4 py-3 flex items-center justify-between space-x-3">
       <div class="flex items-center space-x-2.5">
         <span id="noticeToastIcon" class="text-lg shrink-0">✅</span>
-        <span id="noticeToastMessage" class="text-xs font-semibold text-slate-800 leading-snug">通知内容</span>
+        <span id="noticeToastMessage" class="text-xs font-medium text-foreground leading-snug">通知内容</span>
       </div>
-      <button id="noticeToastClose" class="text-slate-400 hover:text-slate-700 text-lg font-bold leading-none px-1.5 py-0.5 rounded transition" title="关闭通知">&times;</button>
+      <button id="noticeToastClose" class="text-muted-foreground hover:text-foreground text-lg font-bold leading-none px-1.5 py-0.5 rounded transition" title="关闭通知">&times;</button>
     </div>
     <!-- Progress Countdown Bar -->
-    <div class="w-full h-1 bg-slate-100 overflow-hidden">
-      <div id="noticeToastProgressBar" class="h-full bg-emerald-500 w-full transition-none"></div>
+    <div class="w-full h-1 bg-secondary overflow-hidden">
+      <div id="noticeToastProgressBar" class="h-full bg-primary w-full transition-none"></div>
     </div>
   </div>
 
   <!-- Application Logic -->
   <script>
+    // Global Three.js References (hoisted to avoid Temporal Dead Zone reference errors)
+    let scene = null;
+    let renderer = null;
+    let gridHelper = null;
+
+    // --- shadcn/ui Theme Management ---
+    function initTheme() {
+      const saved = localStorage.getItem('urdforge_theme') || 'dark';
+      applyTheme(saved);
+      const btn = document.getElementById('btnThemeToggle');
+      if (btn) {
+        btn.addEventListener('click', toggleTheme);
+      }
+    }
+
+    function applyTheme(theme) {
+      const isDark = theme === 'dark';
+      document.documentElement.classList.toggle('dark', isDark);
+      localStorage.setItem('urdforge_theme', theme);
+
+      const iconSun = document.getElementById('iconSun');
+      const iconMoon = document.getElementById('iconMoon');
+      if (iconSun && iconMoon) {
+        if (isDark) {
+          iconSun.classList.remove('hidden');
+          iconMoon.classList.add('hidden');
+        } else {
+          iconSun.classList.add('hidden');
+          iconMoon.classList.remove('hidden');
+        }
+      }
+
+      // Synchronize 3D scene background (if initialized)
+      if (scene) {
+        scene.background = new THREE.Color(isDark ? 0x121316 : 0x5a646e);
+      }
+      if (gridHelper) {
+        gridHelper.material.color.setHex(isDark ? 0x27272a : 0x73808c);
+        gridHelper.material.opacity = isDark ? 0.6 : 0.85;
+      }
+      if (renderer && typeof requestRender === 'function') {
+        try { requestRender(); } catch (e) {}
+      }
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    // Auto initialize theme on parse
+    initTheme();
+
     // --- Global Application Settings (Request 3, 4, 5) ---
     const DEFAULT_SETTINGS = {
       toastDurationSeconds: 3.5,
@@ -1185,7 +1463,7 @@
       };
 
       iconEl.textContent = icons[type] || icons.info;
-      toast.className = `fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-white/95 backdrop-blur-md border-2 ${borderColors[type] || borderColors.info} rounded-xl shadow-2xl flex flex-col overflow-hidden transition-all duration-200 select-none min-w-[340px] max-w-lg`;
+      toast.className = `fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-card/95 text-card-foreground backdrop-blur-md border ${borderColors[type] || borderColors.info} rounded-xl shadow-2xl flex flex-col overflow-hidden transition-all duration-200 select-none min-w-[340px] max-w-lg`;
       barEl.className = `h-full ${barColors[type] || barColors.info} transition-none`;
 
       if (toastTimeout) clearTimeout(toastTimeout);
@@ -1376,9 +1654,9 @@
     }
 
     const container = document.getElementById('viewport3d');
-    const scene = new THREE.Scene();
-    // Neutral studio gray background matching B1_Robotic_Arm_App (0x68727a)
-    scene.background = new THREE.Color(0x68727a);
+    scene = new THREE.Scene();
+    const isDarkInit = document.documentElement.classList.contains('dark');
+    scene.background = new THREE.Color(isDarkInit ? 0x121316 : 0x5a646e);
 
     const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.005, 50);
     if (appSettings.worldUpAxis !== 'Y') {
@@ -1389,7 +1667,7 @@
       camera.position.set(0.45, 0.45, 0.45);
     }
 
-    const renderer = new THREE.WebGLRenderer({
+    renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: false,
       powerPreference: "high-performance"
@@ -1451,10 +1729,10 @@
     }
     updateSceneLighting(appSettings.worldUpAxis);
 
-    // Studio Ground Grid from B1_Robotic_Arm_App (0xb8b8b8, 0x8a8a8a)
-    const gridHelper = new THREE.GridHelper(2.4, 24, 0xb8b8b8, 0x8a8a8a);
+    // Studio Ground Grid
+    gridHelper = new THREE.GridHelper(2.4, 24, isDarkInit ? 0x27272a : 0xb8b8b8, isDarkInit ? 0x1f1f23 : 0x8a8a8a);
     gridHelper.material.transparent = true;
-    gridHelper.material.opacity = 0.85;
+    gridHelper.material.opacity = isDarkInit ? 0.6 : 0.85;
     if (appSettings.worldUpAxis !== 'Y') {
       gridHelper.rotation.x = Math.PI / 2;
       gridHelper.position.set(0, 0, -0.001);
@@ -2138,9 +2416,9 @@
 
       document.querySelectorAll('.axis-preset-btn').forEach(btn => {
         if (btn.dataset.axis === targetStr) {
-          btn.className = 'axis-preset-btn px-1 py-0.5 text-[10px] rounded border font-mono font-bold bg-blue-600 text-white border-blue-600 shadow-2xs';
+          btn.className = 'axis-preset-btn px-1 py-0.5 text-[10px] rounded-md border font-mono font-semibold bg-primary text-primary-foreground border-primary shadow-xs';
         } else {
-          btn.className = 'axis-preset-btn px-1 py-0.5 text-[10px] rounded border font-mono bg-white text-slate-700 border-slate-300 hover:bg-slate-100';
+          btn.className = 'axis-preset-btn px-1 py-0.5 text-[10px] rounded-md border font-mono bg-card text-foreground border-border hover:bg-accent';
         }
       });
     }
@@ -2739,7 +3017,7 @@
       container.innerHTML = '';
 
       if (!features || features.length === 0) {
-        container.innerHTML = `<div class="text-slate-400 text-center py-4 text-xs">尚未检测到特征</div>`;
+        container.innerHTML = `<div class="text-muted-foreground text-center py-4 text-xs font-mono">尚未检测到特征</div>`;
         document.getElementById('featureCountBadge').textContent = '0 特征';
         return;
       }
@@ -2763,7 +3041,7 @@
       }
 
       if (list.length === 0) {
-        container.innerHTML = `<div class="text-slate-400 text-center py-4 text-xs">无匹配几何特征</div>`;
+        container.innerHTML = `<div class="text-muted-foreground text-center py-4 text-xs font-mono">无匹配几何特征</div>`;
         document.getElementById('featureCountBadge').textContent = '0 特征';
         return;
       }
@@ -2794,44 +3072,44 @@
         );
 
         const groupCard = document.createElement('div');
-        groupCard.className = 'part-feature-group border border-slate-200 rounded-lg overflow-hidden bg-white mb-1.5 shadow-2xs';
+        groupCard.className = 'part-feature-group border border-border rounded-lg overflow-hidden bg-card text-card-foreground mb-1.5 shadow-xs';
         groupCard.dataset.partName = partName;
 
         const header = document.createElement('div');
-        header.className = `px-2.5 py-1.5 bg-slate-50 hover:bg-blue-50/70 cursor-pointer flex items-center justify-between select-none transition ${isExpanded ? 'border-b border-slate-200' : ''}`;
+        header.className = `px-2.5 py-1.5 bg-muted/40 hover:bg-muted cursor-pointer flex items-center justify-between select-none transition ${isExpanded ? 'border-b border-border' : ''}`;
         header.innerHTML = `
           <div class="flex items-center space-x-1.5 truncate">
-            <span class="group-arrow text-[10px] transform transition-transform ${isExpanded ? 'rotate-90 text-blue-600' : 'text-slate-400'}">▶</span>
+            <span class="group-arrow text-[10px] transform transition-transform ${isExpanded ? 'rotate-90 text-primary' : 'text-muted-foreground'}">▶</span>
             <span class="text-xs">📦</span>
-            <span class="font-bold text-xs text-slate-800 font-mono truncate" title="${partName}">${partName}</span>
+            <span class="font-medium text-xs text-foreground font-mono truncate" title="${partName}">${partName}</span>
           </div>
           <div class="flex items-center space-x-1 shrink-0">
-            <span class="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-700 font-semibold">${partFeats.length} 特征</span>
+            <span class="badge-secondary">${partFeats.length} 特征</span>
           </div>
         `;
 
         const body = document.createElement('div');
-        body.className = `part-feature-group-body space-y-1 p-1.5 bg-slate-50/50 ${isExpanded ? '' : 'hidden'}`;
+        body.className = `part-feature-group-body space-y-1 p-1.5 bg-background/40 ${isExpanded ? '' : 'hidden'}`;
 
         partFeats.forEach((feat, idx) => {
           const item = document.createElement('div');
           const isCyl = feat.type && feat.type.includes('cylinder');
-          const badgeColor = isCyl ? 'bg-blue-100 text-blue-700 border-blue-300' : 'bg-emerald-100 text-emerald-700 border-emerald-300';
+          const badgeColor = isCyl ? 'badge-primary' : 'badge-emerald';
           const badgeText = isCyl ? '圆柱' : '孔边缘';
           const rMm = (feat.radius_m * 1000).toFixed(1);
           const isSelected = appState.activeSnapFeature === feat;
 
-          item.className = `feature-row p-1.5 rounded bg-white flex items-center justify-between cursor-pointer hover:bg-blue-50/80 transition text-xs border ${isSelected ? 'border-blue-500 bg-blue-50/90 ring-1 ring-blue-400 font-semibold' : 'border-slate-200'}`;
+          item.className = `feature-row p-1.5 rounded-md bg-card flex items-center justify-between cursor-pointer hover:bg-accent transition text-xs border ${isSelected ? 'border-primary ring-1 ring-primary/40 bg-accent font-semibold' : 'border-border'}`;
           item.dataset.part = feat.part_name;
           item.dataset.id = feat.feature_id || '';
           item.dataset.idx = idx;
 
           item.innerHTML = `
             <div class="flex items-center space-x-1.5 truncate">
-              <span class="text-[10px] font-bold px-1.5 py-0.2 rounded border ${badgeColor} shrink-0">${badgeText}</span>
-              <span class="text-[11px] font-mono text-slate-600 truncate">#${idx + 1} ${isCyl ? '圆柱轴线' : '圆形孔/面边缘'}</span>
+              <span class="text-[10px] font-medium px-1.5 py-0.2 rounded border ${badgeColor} shrink-0">${badgeText}</span>
+              <span class="text-[11px] font-mono text-muted-foreground truncate">#${idx + 1} ${isCyl ? '圆柱轴线' : '圆形孔/面边缘'}</span>
             </div>
-            <span class="text-[11px] font-mono font-bold text-slate-700 shrink-0">R=${rMm}mm</span>
+            <span class="text-[11px] font-mono font-bold text-foreground shrink-0">R=${rMm}mm</span>
           `;
 
           item.addEventListener('click', (e) => {
@@ -2850,18 +3128,18 @@
           const arrow = header.querySelector('.group-arrow');
           if (currentlyHidden) {
             body.classList.remove('hidden');
-            header.classList.add('border-b', 'border-slate-200');
+            header.classList.add('border-b', 'border-border');
             if (arrow) {
-              arrow.classList.add('rotate-90', 'text-blue-600');
-              arrow.classList.remove('text-slate-400');
+              arrow.classList.add('rotate-90', 'text-primary');
+              arrow.classList.remove('text-muted-foreground');
             }
             appState.expandedFeatureParts.add(partName);
           } else {
             body.classList.add('hidden');
-            header.classList.remove('border-b', 'border-slate-200');
+            header.classList.remove('border-b', 'border-border');
             if (arrow) {
-              arrow.classList.remove('rotate-90', 'text-blue-600');
-              arrow.classList.add('text-slate-400');
+              arrow.classList.remove('rotate-90', 'text-primary');
+              arrow.classList.add('text-muted-foreground');
             }
             appState.expandedFeatureParts.delete(partName);
           }
@@ -2884,10 +3162,10 @@
         const header = groupCard.querySelector('div');
         if (body && body.classList.contains('hidden')) {
           body.classList.remove('hidden');
-          if (header) header.classList.add('border-b', 'border-slate-200');
+          if (header) header.classList.add('border-b', 'border-border');
           if (arrow) {
-            arrow.classList.add('rotate-90', 'text-blue-600');
-            arrow.classList.remove('text-slate-400');
+            arrow.classList.add('rotate-90', 'text-primary');
+            arrow.classList.remove('text-muted-foreground');
           }
           appState.expandedFeatureParts.add(partName);
         }
@@ -2895,10 +3173,10 @@
 
       document.querySelectorAll('.feature-row').forEach(el => {
         if (el.dataset.part === feat.part_name && (!feat.feature_id || el.dataset.id === String(feat.feature_id))) {
-          el.classList.add('border-blue-500', 'bg-blue-50/90', 'ring-1', 'ring-blue-400', 'font-semibold');
+          el.classList.add('border-primary', 'ring-1', 'ring-primary/40', 'bg-accent', 'font-semibold');
           el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
-          el.classList.remove('border-blue-500', 'bg-blue-50/90', 'ring-1', 'ring-blue-400', 'font-semibold');
+          el.classList.remove('border-primary', 'ring-1', 'ring-primary/40', 'bg-accent', 'font-semibold');
         }
       });
     }
@@ -2970,10 +3248,10 @@
         row.className = 'select-none';
 
         const item = document.createElement('div');
-        item.className = `flex items-center justify-between px-2 py-1 rounded transition text-xs cursor-pointer ${
-          isChecked ? 'bg-amber-50 text-amber-900 font-medium border border-amber-200' :
-          isCurrentLinkPart ? 'bg-blue-50 text-blue-900 border border-blue-200' :
-          'hover:bg-slate-100 text-slate-700'
+        item.className = `flex items-center justify-between px-2 py-1 rounded-md transition text-xs cursor-pointer border ${
+          isChecked ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium border-amber-500/30' :
+          isCurrentLinkPart ? 'bg-primary/10 text-primary border-primary/25 font-medium' :
+          'hover:bg-accent text-foreground border-transparent'
         }`;
         item.style.paddingLeft = `${depth * 14 + 6}px`;
 
@@ -2983,7 +3261,7 @@
         // Fold Arrow for Non-Leaf Assembly Nodes
         if (!isLeaf) {
           const arrow = document.createElement('span');
-          arrow.className = 'text-[10px] text-slate-400 hover:text-slate-700 w-3 text-center inline-block transition';
+          arrow.className = 'text-[10px] text-muted-foreground hover:text-foreground w-3 text-center inline-block transition';
           arrow.textContent = isCollapsed ? '▶' : '▼';
           arrow.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -3004,7 +3282,7 @@
           const chk = document.createElement('input');
           chk.type = 'checkbox';
           chk.checked = isChecked;
-          chk.className = 'rounded border-slate-300 text-blue-600 focus:ring-0 mr-1';
+          chk.className = 'rounded border-input text-primary focus:ring-0 mr-1.5 accent-primary cursor-pointer';
           chk.addEventListener('click', (e) => {
             e.stopPropagation();
             if (chk.checked) appState.checkedParts.add(node.name);
@@ -3030,8 +3308,7 @@
 
         // Right Badge
         const rightBadge = document.createElement('span');
-        rightBadge.className = 'text-[10px] px-1.5 py-0.2 rounded font-mono shrink-0 ml-1 ' +
-          (isLeaf ? 'bg-slate-100 text-slate-500' : 'bg-blue-50 text-blue-600 border border-blue-200');
+        rightBadge.className = 'shrink-0 ml-1 ' + (isLeaf ? 'badge-secondary' : 'badge-outline');
         rightBadge.textContent = isLeaf ? 'PART' : (node.children ? node.children.length : '');
         item.appendChild(rightBadge);
 
@@ -3131,8 +3408,8 @@
 
     document.getElementById('btnFilterBySelectedPart').addEventListener('click', () => {
       appState.filterOnlySelectedPartFeats = !appState.filterOnlySelectedPartFeats;
-      document.getElementById('btnFilterBySelectedPart').className = `text-[10px] px-2 py-1 rounded border shrink-0 font-medium ${
-        appState.filterOnlySelectedPartFeats ? 'bg-blue-100 border-blue-400 text-blue-700' : 'bg-white border-slate-300 text-slate-700'
+      document.getElementById('btnFilterBySelectedPart').className = `text-[10px] px-2 py-1 rounded-md border shrink-0 font-medium transition ${
+        appState.filterOnlySelectedPartFeats ? 'bg-primary text-primary-foreground border-primary' : 'btn-studio-secondary'
       }`;
       renderFeaturesList(appState.features);
     });
@@ -3152,19 +3429,19 @@
         if (anyHidden) {
           // Expand all
           if (body) body.classList.remove('hidden');
-          if (header) header.classList.add('border-b', 'border-slate-200');
+          if (header) header.classList.add('border-b', 'border-border');
           if (arrow) {
-            arrow.classList.add('rotate-90', 'text-blue-600');
-            arrow.classList.remove('text-slate-400');
+            arrow.classList.add('rotate-90', 'text-primary');
+            arrow.classList.remove('text-muted-foreground');
           }
           if (partName) appState.expandedFeatureParts.add(partName);
         } else {
           // Collapse all
           if (body) body.classList.add('hidden');
-          if (header) header.classList.remove('border-b', 'border-slate-200');
+          if (header) header.classList.remove('border-b', 'border-border');
           if (arrow) {
-            arrow.classList.remove('rotate-90', 'text-blue-600');
-            arrow.classList.add('text-slate-400');
+            arrow.classList.remove('rotate-90', 'text-primary');
+            arrow.classList.add('text-muted-foreground');
           }
           if (partName) appState.expandedFeatureParts.delete(partName);
         }
@@ -3220,9 +3497,9 @@
         const massStr = massVal.toFixed(3) + 'kg';
 
         const row = document.createElement('div');
-        row.className = `p-2 rounded studio-card flex items-center justify-between cursor-pointer border transition text-xs ${
-          isCurrentActive ? 'bg-blue-50 border-blue-400 shadow-sm' : 'bg-white hover:bg-slate-50 border-slate-200'
-        } ${isHidden ? 'opacity-60 bg-slate-50/70' : ''}`;
+        row.className = `p-2 rounded-lg studio-card flex items-center justify-between cursor-pointer border transition text-xs ${
+          isCurrentActive ? 'border-primary ring-1 ring-primary/40 bg-accent' : 'hover:bg-accent/50 border-border'
+        } ${isHidden ? 'opacity-50' : ''}`;
         row.style.marginLeft = `${depth * 14}px`;
 
         const left = document.createElement('div');
@@ -3233,12 +3510,12 @@
         left.appendChild(icon);
 
         const nameSpan = document.createElement('span');
-        nameSpan.className = `font-bold ${isCurrentActive ? 'text-blue-700' : 'text-slate-800'}`;
+        nameSpan.className = `font-semibold ${isCurrentActive ? 'text-primary' : 'text-foreground'}`;
         nameSpan.textContent = linkName;
         left.appendChild(nameSpan);
 
         const badge = document.createElement('span');
-        badge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 font-mono';
+        badge.className = 'badge-secondary';
         badge.textContent = `${partCount} 零件`;
         left.appendChild(badge);
 
@@ -3247,12 +3524,12 @@
         btnEye.type = 'button';
         btnEye.className = `p-0.5 rounded transition inline-flex items-center justify-center shrink-0 ${
           isHidden 
-            ? 'text-slate-400 hover:text-slate-600 bg-slate-200/70' 
-            : 'text-slate-400 hover:text-blue-600 hover:bg-slate-100'
+            ? 'text-muted-foreground hover:text-foreground bg-muted' 
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
         }`;
         btnEye.title = isHidden ? `显示连杆 ${linkName} 包含的零件` : `隐藏连杆 ${linkName} 包含的零件`;
         btnEye.innerHTML = isHidden
-          ? `<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>`
+          ? `<svg class="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/></svg>`
           : `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>`;
         btnEye.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -3266,13 +3543,13 @@
         right.className = 'flex items-center space-x-2 shrink-0';
 
         const massBadge = document.createElement('span');
-        massBadge.className = 'text-[10px] font-mono text-slate-500';
+        massBadge.className = 'text-[10px] font-mono text-muted-foreground';
         massBadge.textContent = massStr;
         right.appendChild(massBadge);
 
         if (depth > 0 || linkName !== rootLink) {
           const btnDel = document.createElement('button');
-          btnDel.className = 'text-rose-400 hover:text-rose-700 font-bold text-xs px-1 hover:bg-rose-50 rounded leading-none';
+          btnDel.className = 'text-muted-foreground hover:text-destructive font-bold text-xs px-1 hover:bg-destructive/10 rounded leading-none transition';
           btnDel.innerHTML = '&times;';
           btnDel.title = `删除连杆 ${linkName}`;
           btnDel.addEventListener('click', async (e) => {
@@ -3297,18 +3574,18 @@
         if (parentMap[linkName]) {
           parentMap[linkName].forEach((childInfo) => {
             const jRow = document.createElement('div');
-            jRow.className = 'flex items-center justify-between px-3 py-1 text-[11px] text-slate-500 font-mono hover:bg-slate-50 rounded group';
+            jRow.className = 'flex items-center justify-between px-3 py-1 text-[11px] text-muted-foreground font-mono hover:bg-accent rounded group transition';
             jRow.style.marginLeft = `${depth * 14 + 14}px`;
             jRow.innerHTML = `
               <div class="flex items-center space-x-1.5 truncate">
                 <span>↳</span>
-                <span class="text-blue-600 font-semibold cursor-pointer hover:underline" title="点击编辑此关节">⚙️ ${childInfo.joint}</span>
-                <span class="text-slate-400 text-[10px]">(${childInfo.type})</span>
+                <span class="joint-title text-foreground font-semibold cursor-pointer hover:underline" title="点击编辑此关节">⚙️ ${childInfo.joint}</span>
+                <span class="text-muted-foreground text-[10px]">(${childInfo.type})</span>
               </div>
-              <button class="text-slate-400 hover:text-rose-600 font-bold px-1 text-xs shrink-0 hover:bg-rose-50 rounded" title="删除此关节">&times;</button>
+              <button class="text-muted-foreground hover:text-destructive font-bold px-1 text-xs shrink-0 hover:bg-destructive/10 rounded leading-none transition" title="删除此关节">&times;</button>
             `;
 
-            jRow.querySelector('span.text-blue-600').addEventListener('click', (e) => {
+            jRow.querySelector('span.joint-title').addEventListener('click', (e) => {
               e.stopPropagation();
               selectJointForEditing(childInfo.joint);
             });
@@ -3331,14 +3608,14 @@
       const orphanLinks = Object.keys(links).filter(name => !renderedLinks.has(name));
       if (orphanLinks.length > 0) {
         const orphanSection = document.createElement('div');
-        orphanSection.className = 'mt-3 pt-2 border-t border-dashed border-amber-300';
+        orphanSection.className = 'mt-3 pt-2 border-t border-dashed border-amber-500/40';
         orphanSection.innerHTML = `
-          <div class="flex items-center justify-between text-[11px] font-bold text-amber-700 mb-1.5">
+          <div class="flex items-center justify-between text-[11px] font-semibold text-amber-600 dark:text-amber-400 mb-1.5">
             <span class="flex items-center space-x-1">
               <span>⚠️</span>
               <span>未接入拓扑树的独立连杆 (${orphanLinks.length}):</span>
             </span>
-            <span class="text-[10px] text-amber-600 font-normal">需配置关节连接</span>
+            <span class="text-[10px] text-muted-foreground font-normal">需配置关节连接</span>
           </div>
         `;
         container.appendChild(orphanSection);
@@ -3363,16 +3640,16 @@
       chipsContainer.innerHTML = '';
 
       if (!link || !link.cad_part_ids || link.cad_part_ids.length === 0) {
-        chipsContainer.innerHTML = `<span class="text-slate-400 text-[11px] m-auto">未分配零件（从左侧勾选零件并点击分配）</span>`;
+        chipsContainer.innerHTML = `<span class="text-muted-foreground text-[11px] m-auto">未分配零件（从左侧勾选零件并点击分配）</span>`;
         document.getElementById('assignedPartsCountText').textContent = '0';
       } else {
         document.getElementById('assignedPartsCountText').textContent = link.cad_part_ids.length;
         link.cad_part_ids.forEach((pName) => {
           const chip = document.createElement('div');
-          chip.className = 'flex items-center space-x-1 px-2 py-0.5 rounded bg-blue-50 text-blue-800 border border-blue-200 text-xs font-mono';
+          chip.className = 'flex items-center space-x-1 px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground border border-border text-xs font-mono';
           chip.innerHTML = `
             <span>${pName}</span>
-            <button class="text-slate-400 hover:text-rose-600 font-bold ml-1 leading-none">&times;</button>
+            <button class="text-muted-foreground hover:text-destructive font-bold ml-1 leading-none">&times;</button>
           `;
           chip.querySelector('button').addEventListener('click', async () => {
             await removePartFromLink(activeLinkName, pName);
@@ -3782,7 +4059,7 @@
         container.innerHTML = '';
         affectedLinks.forEach(linkName => {
           const badge = document.createElement('span');
-          badge.className = 'px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300 font-mono text-[11px] font-bold flex items-center space-x-1 shadow-2xs';
+          badge.className = 'px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-mono text-[11px] font-medium flex items-center space-x-1 shadow-xs';
           badge.innerHTML = `<span>🔗</span><span>${linkName}</span>`;
           container.appendChild(badge);
         });
@@ -4049,9 +4326,11 @@
     document.getElementById('btnToggleSnap').addEventListener('click', () => {
       appState.snappingMode = !appState.snappingMode;
       featureMarkersGroup.visible = appState.snappingMode;
-      document.getElementById('snapIndicator').textContent = appState.snappingMode ? '🎯' : '⭕';
-      document.getElementById('snapText').textContent = appState.snappingMode ? '特征吸附模式 (开)' : '特征吸附模式 (关)';
-      document.getElementById('btnToggleSnap').className = `btn-studio-secondary flex items-center space-x-1 text-xs px-3 py-1.5 ${appState.snappingMode ? 'bg-blue-50 border-blue-400 text-blue-700 font-bold' : ''}`;
+      const snapInd = document.getElementById('snapIndicator');
+      if (snapInd) snapInd.textContent = appState.snappingMode ? '🎯' : '⭕';
+      const snapTxt = document.getElementById('snapText');
+      if (snapTxt) snapTxt.textContent = appState.snappingMode ? '特征吸附 (开)' : '特征吸附';
+      document.getElementById('btnToggleSnap').className = `btn-studio-secondary flex items-center space-x-1.5 text-xs px-2.5 py-1.5 transition ${appState.snappingMode ? 'bg-primary text-primary-foreground border-primary font-medium' : ''}`;
     });
 
     // Quick Snap Toast Button
@@ -4324,9 +4603,9 @@
       btnToggleFK.addEventListener('click', () => {
         const isHidden = fkPanel.classList.toggle('hidden');
         if (isHidden) {
-          btnToggleFK.classList.remove('text-blue-600', 'border-blue-400', 'bg-blue-50/80');
+          btnToggleFK.classList.remove('bg-primary', 'text-primary-foreground', 'border-primary');
         } else {
-          btnToggleFK.classList.add('text-blue-600', 'border-blue-400', 'bg-blue-50/80');
+          btnToggleFK.classList.add('bg-primary', 'text-primary-foreground', 'border-primary');
         }
       });
     }
@@ -4335,7 +4614,7 @@
       btnCloseFK.addEventListener('click', () => {
         fkPanel.classList.add('hidden');
         if (btnToggleFK) {
-          btnToggleFK.classList.remove('text-blue-600', 'border-blue-400', 'bg-blue-50/80');
+          btnToggleFK.classList.remove('bg-primary', 'text-primary-foreground', 'border-primary');
         }
       });
     }
@@ -4401,7 +4680,7 @@
 
       if (!appState.robot) {
         if (countBadge) countBadge.textContent = '0';
-        container.innerHTML = `<div class="text-slate-400 text-center py-4 text-xs font-mono">暂无活动关节<div class="text-[11px] text-slate-400 mt-0.5 font-sans">（创建连杆与关节后在此实时调试）</div></div>`;
+        container.innerHTML = `<div class="text-muted-foreground text-center py-4 text-xs font-mono">暂无活动关节<div class="text-[11px] text-muted-foreground mt-0.5 font-sans">（创建连杆与关节后在此实时调试）</div></div>`;
         return;
       }
 
@@ -4409,7 +4688,7 @@
       if (countBadge) countBadge.textContent = joints.length;
 
       if (joints.length === 0) {
-        container.innerHTML = `<div class="text-slate-400 text-center py-4 text-xs font-mono">暂无活动关节<div class="text-[11px] text-slate-400 mt-0.5 font-sans">（创建连杆与关节后在此实时调试）</div></div>`;
+        container.innerHTML = `<div class="text-muted-foreground text-center py-4 text-xs font-mono">暂无活动关节<div class="text-[11px] text-muted-foreground mt-0.5 font-sans">（创建连杆与关节后在此实时调试）</div></div>`;
         return;
       }
 
@@ -4435,7 +4714,7 @@
           unit = 'm';
           currentVal = appState.jointValues[joint.name] !== undefined ? appState.jointValues[joint.name] : 0.0;
           const span = Math.abs(maxVal - minVal);
-          // Requirement 3: Allow precision down to 0.0000001 (1e-7), limits < 0.001, subdivide slider into 1000 steps
+          // Subdivide slider into 1000 steps
           const computedStep = span > 0 ? span / 1000 : 0.0000001;
           sliderStep = Math.max(0.0000001, Math.min(0.001, computedStep));
         }
@@ -4450,13 +4729,13 @@
         };
 
         const div = document.createElement('div');
-        div.className = 'studio-card p-2 text-xs space-y-1.5 bg-white border border-slate-200 rounded-lg shadow-xs';
+        div.className = 'studio-card p-2 text-xs space-y-1.5 rounded-lg shadow-xs mb-1.5';
         div.innerHTML = `
           <div class="flex justify-between items-center">
-            <span class="font-bold text-slate-800 font-mono truncate mr-2" title="${joint.name}">${joint.name}</span>
-            <span id="val_${joint.name}" class="font-mono text-blue-600 font-bold shrink-0">${formatDisplayVal(currentVal)}</span>
+            <span class="font-medium text-foreground font-mono truncate mr-2" title="${joint.name}">${joint.name}</span>
+            <span id="val_${joint.name}" class="font-mono text-primary font-bold shrink-0">${formatDisplayVal(currentVal)}</span>
           </div>
-          <input type="range" id="slider_${joint.name}" min="${minVal}" max="${maxVal}" value="${currentVal}" step="${sliderStep}" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+          <input type="range" id="slider_${joint.name}" min="${minVal}" max="${maxVal}" value="${currentVal}" step="${sliderStep}" class="w-full h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary">
         `;
 
         const slider = div.querySelector(`#slider_${joint.name}`);
@@ -4644,11 +4923,11 @@
       modalPartsChipsContainer.innerHTML = '';
 
       if (checkedArr.length === 0) {
-        modalPartsChipsContainer.innerHTML = `<span class="text-slate-400 m-auto">未选择零件（从左侧勾选）</span>`;
+        modalPartsChipsContainer.innerHTML = `<span class="text-muted-foreground m-auto text-xs">未选择零件（从左侧勾选）</span>`;
       } else {
         checkedArr.forEach(pName => {
           const chip = document.createElement('span');
-          chip.className = 'px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200 font-mono';
+          chip.className = 'px-2 py-0.5 rounded-md bg-secondary text-secondary-foreground border border-border font-mono text-xs';
           chip.textContent = pName;
           modalPartsChipsContainer.appendChild(chip);
         });
@@ -4846,19 +5125,18 @@
     });
 
     // --- Open Local Custom File Handler ---
-    document.getElementById('btnOpenLocalFile').addEventListener('click', async () => {
-      try {
-        const res = await fetch('/api/system/choose_file', { method: 'POST' });
-        const data = await res.json();
-        if (data.status === 'selected' && data.filepath) {
-          loadStepAssembly(data.filepath);
-          return;
-        } else if (data.status === 'cancelled') {
-          return;
-        }
-      } catch (e) {}
-      document.getElementById('stepFileInput').click();
+    const stepFileInput = document.getElementById('stepFileInput');
+    document.getElementById('btnOpenLocalFile').addEventListener('click', () => {
+      if (stepFileInput) stepFileInput.click();
     });
+
+    const topHeaderContainer = document.getElementById('topHeaderFileContainer');
+    if (topHeaderContainer) {
+      topHeaderContainer.style.cursor = 'pointer';
+      topHeaderContainer.addEventListener('click', () => {
+        if (stepFileInput) stepFileInput.click();
+      });
+    }
 
     document.getElementById('stepFileInput').addEventListener('change', (e) => {
       if (e.target.files && e.target.files[0]) {

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "URDForge-Studio",
+  "version": "0.2.0",
+  "identifier": "com.urdforge.studio",
+  "build": {
+    "frontendDist": "../src/urdforge/server/static"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "URDForge Studio | 机器人建模与仿真工具",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1024,
+        "minHeight": 680,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

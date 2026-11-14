@@ -66,6 +66,35 @@ if getattr(sys, "frozen", False):
     STATIC_DIR = next((p for p in candidates if p.exists()), candidates[0])
 else:
     STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+    if (STATIC_DIR / "vendor").exists():
+        app.mount("/vendor", StaticFiles(directory=str(STATIC_DIR / "vendor")), name="vendor")
+
+
+@app.get("/api/health")
+def health_check() -> Dict[str, Any]:
+    """Health check endpoint for Tauri and client monitors."""
+    return {"status": "ok", "app": "URDForge Studio", "version": "0.2.0"}
+
+
+@app.get("/favicon.ico")
+def get_favicon():
+    fav = STATIC_DIR / "favicon.ico"
+    if fav.exists():
+        return FileResponse(fav)
+    return Response(status_code=404)
+
+
+@app.get("/icon.png")
+def get_icon():
+    ico = STATIC_DIR / "icon.png"
+    if ico.exists():
+        return FileResponse(ico)
+    return Response(status_code=404)
+
+
 CACHE_DIR = Path("output").resolve()
 CACHE_DIR.mkdir(parents=True, exist_ok=True)
 MESH_DIR = CACHE_DIR / "meshes"
